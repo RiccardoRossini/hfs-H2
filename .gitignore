@@ -1,41 +1,45 @@
-# Prerequisites
+# Standard C/C++
 *.d
-
-# Compiled Object files
-*.slo
-*.lo
 *.o
 *.obj
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Linker files
-*.ilk
-
-# Debugger Files
-*.pdb
-
-# Compiled Dynamic libraries
 *.so
-*.dylib
 *.dll
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
+*.dylib
 *.a
 *.lib
-
-# Executables
 *.exe
 *.out
 *.app
-
-# debug information files
+*.pdb
+*.ilk
 *.dwo
+
+# Editor backup
+*~
+*.swp
+
+# ROOT / analysis output
+*.root
+
+# Plots generated
+plots/
+*.png
+*.pdf
+*.jpg
+
+# Data
+data/
+
+# Condor logs
+condor/logs/*.log
+condor/logs/*.out
+condor/logs/*.err
+
+# Keep condor submit files
+!condor/*.sub
+!condor/*.sh
+!condor/*.dag
+!condor/*.jdl
+
+# Ignore generic calcratebatch current version
+calcratebatch.cxx

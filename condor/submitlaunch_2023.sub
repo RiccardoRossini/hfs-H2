@@ -1,0 +1,14 @@
+universe = vanilla
+executable =  /storage/gpfs_data/famu/riccardo/analysis/stat_comparison_del/condor/launch_2023.sh
+output =      /storage/gpfs_data/famu/riccardo/analysis/stat_comparison_del/condor/logs/loglaunch_2023_$(Cluster)_$(Process).out
+error =       /storage/gpfs_data/famu/riccardo/analysis/stat_comparison_del/condor/logs/loglaunch_2023_$(Cluster)_$(Process).err
+log =         /storage/gpfs_data/famu/riccardo/analysis/stat_comparison_del/condor/logs/loglaunch_2023_$(Cluster)_$(Process).log
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+getenv = True
+#use_x509userproxy = true
+
+# CNAF accounting requirement
+primary_unix_group = famu
+
+queue 1
