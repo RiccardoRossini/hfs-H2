@@ -33,10 +33,52 @@ void CalcRateBatch(TString tag      = "RAL202405",
   Double_t* yErr1 = new Double_t[nPoints];
   Double_t* yErr2 = new Double_t[nPoints];
   
-  TString detname = GetDetName(tag, ndet);  
+//  vector<Double_t> lambdaTrueVec[2];
+  vector<Double_t> lambdaTrueVec = {0,0};     
+  
+  // Setting up string variables
+  
+  TString detname = GetDetName(tag, ndet);
+
+  TString weightName = weight;
+  weightName.ReplaceAll("*", "");
+  weightName.ReplaceAll(".", "p");
+
+  TString lcut = lasercut;
+  lcut.Remove(0, lcut.Last('=') + 1);
+  
+  // setting up and opening the output file
+  TString ofilename = Form("plots/calcratebatch/calcratebatch_%s-RV%i_lphd%s_ndet%03i_bsys%i_weight%s_t%04i-%04ins_ene%03i-%03ikeV_ref%s-RV%i-b%02i.root",
+			   tag.Data(), repro, lcut.Data(), ndet, bsys, weightName.Data(), tmin, tmax, sign0, sign1, tagB.Data(), reproB, batchB);
+  TFile* ofile = new TFile(ofilename, "RECREATE");
+  cout << " ofilename: " << ofilename << endl;
+  
+  // setting up the output file tree
+  TTree* tree = new TTree("tRate", "Rate batch results");
+  UInt_t   t_batch;
+  Double_t t_lambdaAim;
+  Double_t t_lambdaTrue;
+  Double_t t_lambdaTrueErr;
+  Double_t t_s0;
+  Double_t t_s0Err;
+  Double_t t_trigRatio;
+  Double_t t_yield;
+  Double_t t_yieldErr;
+  tree->Branch("batch",             &t_batch,         "batch/i");
+  tree->Branch("lambdaAim",         &t_lambdaAim,     "lambdaAim/D");
+  tree->Branch("lambdaTrue",        &t_lambdaTrue,    "lambdaTrue/D");
+  tree->Branch("lambdaTrueErr",     &t_lambdaTrueErr, "lambdaTrueErr/D");
+  tree->Branch("s0",                &t_s0,            "s0/D");
+  tree->Branch("s0err",             &t_s0Err,         "s0err/D");
+  tree->Branch("trigRatio",         &t_trigRatio,     "trigRatio/D");
+  tree->Branch("yield",             &t_yield,         "yield/D");
+  tree->Branch("yieldErr",          &t_yieldErr,      "yieldErr/D");
+  
+  
   
 //  for (UInt_t npp=0; npp<nPoints; npp++)     cout << batchVec[npp] << endl; //debug
   
+  ////////// MAIN LOOP /////////////
   for (UInt_t np=0; np<nPoints; np++) {
 
 //    if (!np) continue;
@@ -65,52 +107,64 @@ void CalcRateBatch(TString tag      = "RAL202405",
     yErr0[np] = s0err;
 //    yErr0[np] = sqrt(pow(s0err, 2) + pow(sys, 2)); // Add systematic effect due to background fluctuations
 
-    yVal1[np] = GetTriggersRR(tag, repro, batchS, lasercut) / GetTriggersRR(tagB, reproB, batchB, lasercut);
+    Double_t den = GetTriggersRR(tagB, reproB, batchB, lasercut);
+    if (den==0){ // check denominator is not zero! 
+       cerr << "ERROR: zero triggers in reference sample\n" << "tagB=" << tagB << " reproB=" << reproB << " batchB=" << batchB << endl;
+       throw std::runtime_error("Zero reference triggers");
+    }
+    yVal1[np] = GetTriggersRR(tag, repro, batchS, lasercut) / den;
     yErr1[np] = 0;
     
     yVal2[np] = yVal0[np]/yVal1[np]; // Oxygen X-rays per muon trigger
     yErr2[np] = yErr0[np]/yVal1[np];
+
+//		auto lambdaTrueVec = GetLambdaTrueRR(tag, repro, batchS);
     
     cout << Form(" ndet %03i %8s batch %02i wl %04.0f signal: %9.2f +/- %9.2f (%5.1f%%) triggers: %.0f", 
-		 ndet, detname.Data(), batchS, lambda,
-		 yVal0[np], yErr0[np], 100*yErr0[np]/yVal0[np],
-		 yVal1[np]) << endl;
-  }
-  
-  TString weightName = weight;
-  weightName.ReplaceAll("*", "");
-  weightName.ReplaceAll(".", "p");
-  
-  TString lcut = lasercut;
-  lcut.Remove(0, lcut.Last('=') + 1);
-  
-  TString ofilename = Form("plots/calcratebatch/calcratebatch_%s-RV%i_lphd%s_ndet%03i_bsys%i_weight%s_t%04i-%04ins_ene%03i-%03ikeV_ref%s-RV%i-b%02i.root",
-			   tag.Data(), repro, lcut.Data(), ndet, bsys, weightName.Data(), tmin, tmax, sign0, sign1, tagB.Data(), reproB, batchB);
-  
-  TFile* ofile = new TFile(ofilename, "UPDATE");
+		  ndet, detname.Data(), batchS, lambda,
+		  yVal0[np], yErr0[np], 100*yErr0[np]/yVal0[np],
+		  yVal1[np]) << endl;
 
-  cout << " ofilename: " << ofilename << endl;
+		 
+		// filling the tree
+		t_batch         = batchS;
+    t_lambdaAim     = lambda;
+    t_lambdaTrue    = lambdaTrueVec[0];
+    t_lambdaTrueErr = lambdaTrueVec[1];
+    t_s0            = yVal0[np];
+    t_s0Err         = yErr0[np];
+    t_trigRatio     = yVal1[np];
+    t_yield         = yVal2[np];
+    t_yieldErr      = yErr2[np];
+    tree->Fill();
 
+  } ////////// END OF MAIN LOOP /////////////
+
+  // setting up the output file graphs
   TGraphErrors* g0 = new TGraphErrors(nPoints, xVal, yVal0, NULL, yErr0);
   TGraphErrors* g1 = new TGraphErrors(nPoints, xVal, yVal1, NULL, yErr1);
-//  TGraphErrors* g2 = new TGraphErrors(nPoints, xVal, yVal2, NULL, yErr2);
-
   TString xtitle = "Wavelength [pm] - 6788000";
-
   g0->GetXaxis()->SetTitle(xtitle);
   g1->GetXaxis()->SetTitle(xtitle);
-//  g2->GetXaxis()->SetTitle(xtitle);
-
   g0->GetYaxis()->SetTitle(Form("Normalised integral ratio in [%i,%i] keV wrt. reference", sign0, sign1));
   g1->GetYaxis()->SetTitle("Ratio of #mu triggers wrt. reference");
-//  g2->GetYaxis()->SetTitle(Form("Normalised integral ratio in [%i,%i] keV wrt. reference", sign0, sign1));
-  
+
+  ofile->cd();
   g0->Write("g0");
   g1->Write("g1");
-//  g2->Write("g2");
-  
+  tree->Write("", TObject::kOverwrite);
   ofile->Write("", TObject::kOverwrite);
   ofile->Close();
-  delete ofile;
-  
+
+  delete[] xVal;
+  delete[] yVal0;
+  delete[] yVal1;
+  delete[] yVal2;
+  delete[] yErr0;
+  delete[] yErr1;
+  delete[] yErr2;
+  delete g0;
+  delete g1;
+  delete tree;
+  delete ofile;  
 }

@@ -32,6 +32,7 @@ void rootlogon() {
   gROOT->LoadMacro("macro/GetDetNameRR.C");
   gROOT->LoadMacro("macro/GetTriggersRR.C");
   gROOT->LoadMacro("macro/GetTextRR.C");
+  gROOT->LoadMacro("macro/GetLambdaTrueRR.C");
 
   gROOT->LoadMacro("macro/PlotEne.C");
 

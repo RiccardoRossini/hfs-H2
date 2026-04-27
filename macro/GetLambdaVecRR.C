@@ -1,5 +1,5 @@
 
-vector<UInt_t> GetLambdaVec(TString tag = "RAL202305") {
+vector<UInt_t> GetLambdaVec(TString tag = "RAL202305") { // this function gets the lambda aim i.e. the value set on the laser DAQ as the aim wl for each batch
 
   vector<UInt_t> lambdaVec;
   
