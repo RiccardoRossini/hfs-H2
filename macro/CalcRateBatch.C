@@ -90,8 +90,6 @@ void CalcRateBatch(TString tag      = "RAL202405",
     xVal[np] = lambda;
 
     vector<Double_t> y0vec = PlotEne(tag, repro, batchS, tagB, reproB, batchB, ndet, weight, tmin, tmax, bsys, draw, brmsmax, basemax, flagmax, deltamin, label, lasercut, sign0, sign1);
-//    vector<Double_t> y1vec = PlotEne(tag, repro, batchS, tagB, reproB, batchB, ndet, weight, tmin, tmax, 1, 0, brmsmax, basemax, flagmax, deltamin, label, lasercut);
-//    vector<Double_t> y2vec = PlotEne(tag, repro, batchS, tagB, reproB, batchB, ndet, weight, tmin, tmax, 2, 0, brmsmax, basemax, flagmax, deltamin, label, lasercut);
     
     Double_t s0    = y0vec[0]; // Integral ratio of current batch wrt reference batch 
     Double_t s0err = y0vec[1];

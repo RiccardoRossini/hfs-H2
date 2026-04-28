@@ -19,6 +19,7 @@ vector<Double_t> PlotEne(TString tag      = "RAL202304",
 			 TString lasercut = "lphd==0",
 			 UInt_t  sign0    = 60,
 			 UInt_t  sign1    = 200,
+			 Bool_t  differ   = 0, // the value returned by PlotEne is: 0 = the ratio, 1 = the difference
 			 UInt_t  bin0     = 60,
 			 UInt_t  bin1     = 600,
 			 UInt_t  binw     = 4,
@@ -60,6 +61,9 @@ vector<Double_t> PlotEne(TString tag      = "RAL202304",
   TH1F* h0 = new TH1F(h0name, "", bins, bin0, bin1);
   TH1F* h1 = new TH1F(h1name, "", bins, bin0, bin1);
   TH1F* h2 = new TH1F(h2name, "", bins, bin0, bin1);
+  h0->Sumw2();
+  h1->Sumw2();
+  h2->Sumw2();
 
 
   TCut tcut = Form("%s*(x.brms<%i&&abs(x.base)<%i&&x.flag<%i&&x.delta>%i&&x.start>%i&&x.start<%i&&%s)",
@@ -72,10 +76,10 @@ vector<Double_t> PlotEne(TString tag      = "RAL202304",
   tcut.Print();
   tcutB.Print();
   
-  TString varexp = "x.ene";
+//  TString varexp = "x.ene";
   
-  t1s->Project(h0name, varexp, tcut); 
-  t1b->Project(h1name, varexp, tcutB); // changed the cut because we need this to be no-Laser only
+  t1s->Project(h0name, "x.ene", tcut); 
+  t1b->Project(h1name, "x.ene", tcutB); // changed the cut because we need this to be no-Laser only
 
 //GaussianKernel(t1b->Draw("ene", tcut, "goff"), t1b->GetV1(), h1); 
 
@@ -96,11 +100,8 @@ vector<Double_t> PlotEne(TString tag      = "RAL202304",
   h1->SetFillStyle(3001);
   
   
-    Double_t trg0 = GetTriggersRR(tag,  repro,  batchS, lasercut);
+  Double_t trg0 = GetTriggersRR(tag,  repro,  batchS, lasercut);
   Double_t trg1 = GetTriggersRR(tagB, reproB, batchB, lasercut);
-//  Double_t normtr = trg0/trg1;
-//  cout << "Number of triggers --> \tthis batch: " << trg0 << "\tref batch: " << trg1 << "\tnorm factor: " << normtr << endl;
-//  h1->Scale(normtr);
   cout << "Number of triggers for normalisation --> \tthis batch: " << trg0 << "\tref batch: " << trg1 << endl;
   h0->Scale(1./trg0);
   h1->Scale(1./trg1);;
@@ -193,9 +194,15 @@ vector<Double_t> PlotEne(TString tag      = "RAL202304",
   c1->Print(c1name + ".png");
 
 //  signVec[0] = h2->IntegralAndError(sign0bin, sign1bin, signVec[1]);
-  signVec[0] = norm;
-  signVec[1] = errnorm;
-  
+
+  if (differ==0){                                                 // case 0: return the ratio between the signal and background integrals
+    signVec[0] = norm;
+    signVec[1] = errnorm;
+  } 
+  else if (differ==1){                                            // case 1: retunr the difference between the signal and background integrals
+    signVec[0] = int0-int1;
+    signVec[1] = sqrt(pow(err0,2)+pow(err1,2)
+  }
 //  cout << Form(" sign_sys%i: %.2f +/- %.2f (%.2f %%)", bsys, signVec[0], signVec[1], 100*signVec[1]/signVec[0]) << endl;
 
 //  if (!draw) {
