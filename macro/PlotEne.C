@@ -70,8 +70,9 @@ vector<Double_t> PlotEne(TString tag      = "RAL202304",
 		   weight.Data(), brmsmax, basemax, flagmax, deltamin, start0, start1, lasercut.Data());
 	
 	// we always need noLaser data for the background
-	TCut tcutB = Form("%s*(x.brms<%i&&abs(x.base)<%i&&x.flag<%i&&x.delta>%i&&x.start>%i&&x.start<%i&&lphd==0)",
-		   weight.Data(), brmsmax, basemax, flagmax, deltamin, start0, start1);
+	TString lasercutB = "lphd==0";
+	TCut tcutB = Form("%s*(x.brms<%i&&abs(x.base)<%i&&x.flag<%i&&x.delta>%i&&x.start>%i&&x.start<%i&&%s)",
+		   weight.Data(), brmsmax, basemax, flagmax, deltamin, start0, start1, lasercutB.Data());
   
   tcut.Print();
   tcutB.Print();
@@ -101,7 +102,7 @@ vector<Double_t> PlotEne(TString tag      = "RAL202304",
   
   
   Double_t trg0 = GetTriggersRR(tag,  repro,  batchS, lasercut);
-  Double_t trg1 = GetTriggersRR(tagB, reproB, batchB, lasercut);
+  Double_t trg1 = GetTriggersRR(tagB, reproB, batchB, lasercutB);
   cout << "Number of triggers for normalisation --> \tthis batch: " << trg0 << "\tref batch: " << trg1 << endl;
   h0->Scale(1./trg0);
   h1->Scale(1./trg1);;
@@ -199,9 +200,9 @@ vector<Double_t> PlotEne(TString tag      = "RAL202304",
     signVec[0] = norm;
     signVec[1] = errnorm;
   } 
-  else if (differ==1){                                            // case 1: retunr the difference between the signal and background integrals
+  else if (differ==1){                                            // case 1: return the difference between the signal and background integrals
     signVec[0] = int0-int1;
-    signVec[1] = sqrt(pow(err0,2)+pow(err1,2)
+    signVec[1] = sqrt(pow(err0,2)+pow(err1,2));
   }
 //  cout << Form(" sign_sys%i: %.2f +/- %.2f (%.2f %%)", bsys, signVec[0], signVec[1], 100*signVec[1]/signVec[0]) << endl;
 

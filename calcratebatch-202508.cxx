@@ -15,6 +15,7 @@
   label = "";
   UInt_t  sign0    = 100;
   UInt_t  sign1    = 200;
+  Bool_t  differ   = 0; // differ:  the value returned by PlotEne is: 0 = the ratio, 1 = the difference
 
   if (nset == 1) weight = "1";
   
@@ -43,6 +44,6 @@
   
 //ndet = 1; // LaBr
 
-  CalcRateBatch(tag, repro, tagB, reproB, batchB, ndet, weight, tmin, tmax, bsys, draw, brmsmax, basemax, flagmax, deltamin, lasercut, "Internal", sign0, sign1);
+  CalcRateBatch(tag, repro, tagB, reproB, batchB, ndet, weight, tmin, tmax, bsys, draw, brmsmax, basemax, flagmax, deltamin, lasercut, "Internal", sign0, sign1, differ);
 
 }

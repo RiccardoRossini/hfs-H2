@@ -17,7 +17,8 @@ void CalcRateBatch(TString tag      = "RAL202405",
 		   TString lasercut = "lphd==0",
 		   TString label    = "Internal",
 		   UInt_t  sign0    = 60,
-			 UInt_t  sign1    = 200) {
+			 UInt_t  sign1    = 200,
+			 Bool_t  differ   = 0) { // differ:  the value returned by PlotEne is: 0 = the ratio, 1 = the difference
   
   vector<UInt_t> batchVec  = GetBatchVec (tag);
   vector<UInt_t> lambdaVec = GetLambdaVec(tag);
@@ -36,6 +37,8 @@ void CalcRateBatch(TString tag      = "RAL202405",
 //  vector<Double_t> lambdaTrueVec[2];
   vector<Double_t> lambdaTrueVec = {0,0};     
   
+  TString lasercutB = "lphd==0";
+  
   // Setting up string variables
   
   TString detname = GetDetName(tag, ndet);
@@ -45,7 +48,7 @@ void CalcRateBatch(TString tag      = "RAL202405",
   weightName.ReplaceAll(".", "p");
 
   TString lcut = lasercut;
-  lcut.Remove(0, lcut.Last('=') + 1);
+  lcut.Remove(0, lcut.Last('=') + 1); //just a string for the file name, not a cut! 
   
   // setting up and opening the output file
   TString ofilename = Form("plots/calcratebatch/calcratebatch_%s-RV%i_lphd%s_ndet%03i_bsys%i_weight%s_t%04i-%04ins_ene%03i-%03ikeV_ref%s-RV%i-b%02i.root",
@@ -89,7 +92,7 @@ void CalcRateBatch(TString tag      = "RAL202405",
     
     xVal[np] = lambda;
 
-    vector<Double_t> y0vec = PlotEne(tag, repro, batchS, tagB, reproB, batchB, ndet, weight, tmin, tmax, bsys, draw, brmsmax, basemax, flagmax, deltamin, label, lasercut, sign0, sign1);
+    vector<Double_t> y0vec = PlotEne(tag, repro, batchS, tagB, reproB, batchB, ndet, weight, tmin, tmax, bsys, draw, brmsmax, basemax, flagmax, deltamin, label, lasercut, sign0, sign1, differ);
     
     Double_t s0    = y0vec[0]; // Integral ratio of current batch wrt reference batch 
     Double_t s0err = y0vec[1];
@@ -105,13 +108,14 @@ void CalcRateBatch(TString tag      = "RAL202405",
     yErr0[np] = s0err;
 //    yErr0[np] = sqrt(pow(s0err, 2) + pow(sys, 2)); // Add systematic effect due to background fluctuations
 
-    Double_t den = GetTriggersRR(tagB, reproB, batchB, lasercut);
-    if (den==0){ // check denominator is not zero! 
+    Double_t trgS = GetTriggersRR(tag,  repro,  batchS, lasercut);
+    Double_t trgB = GetTriggersRR(tagB, reproB, batchB, lasercutB);
+    if (trgB==0){ // check denominator is not zero! 
        cerr << "ERROR: zero triggers in reference sample\n" << "tagB=" << tagB << " reproB=" << reproB << " batchB=" << batchB << endl;
-       throw std::runtime_error("Zero reference triggers");
+       throw std::runtime_error("Zero reference triggers in background data");
     }
-    yVal1[np] = GetTriggersRR(tag, repro, batchS, lasercut) / den;
-    yErr1[np] = 0;
+    yVal1[np] = trgS / trgB;
+    yErr1[np] = yVal1[np] * sqrt(1.0/trgS + 1.0/trgB);
     
     yVal2[np] = yVal0[np]/yVal1[np]; // Oxygen X-rays per muon trigger
     yErr2[np] = yErr0[np]/yVal1[np];
