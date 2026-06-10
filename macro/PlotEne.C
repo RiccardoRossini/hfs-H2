@@ -79,13 +79,52 @@ vector<Double_t> PlotEne(TString tag      = "RAL202304",
   
 //  TString varexp = "x.ene";
   
-  t1s->Project(h0name, "x.ene", tcut); 
-  t1b->Project(h1name, "x.ene", tcutB); // changed the cut because we need this to be no-Laser only
+//  t1s->Project(h0name, "x.ene", tcut); 
+//  t1b->Project(h1name, "x.ene", tcutB); // changed the cut because we need this to be no-Laser only
+  
+  
+  // remove noLaser not neighbouring good laser data and apply cuts
+  TString goodlasercut = "lphd>0";
+  Long64_t nTot_S, nSel_S, nTot_B, nSel_B;
+  
+  // signal
+  TEntryList* elistS = NeighbourCut(t1s, goodlasercut);
+  nTot_S = t1s->GetEntries();
+  t1s->SetEntryList(elistS);
+  nSel_S = elistS->GetN();
+  cout << "Total signal events: " << nTot_S << endl;
+  cout << "Signal events surviving neighbour nL cut: " << nSel_S << endl;
+  t1s->Project(h0name, "x.ene", tcut);
+  t1s->SetEntryList(nullptr);
+  delete elistS;
+  
+  // background (lonely-nL not applied to H2 data as there's no laser there!)
+  Bool_t skipNeighbour = (tagB == "RAL202303" && batchB == 6) || (tagB == "RAL202405" && batchB == 25) || (tagB == "RAL202509" && batchB == 33);
+  if (!skipNeighbour) {
+    TEntryList* elistB = NeighbourCut(t1b, goodlasercut);
+    nTot_B = t1b->GetEntries();
+    t1b->SetEntryList(elistB);
+    nSel_B = elistB->GetN();
+    cout << " Total background events: " << nTot_B << endl;
+    cout << " Background events surviving neighbour nL cut: " << nSel_B << endl;
+    t1b->SetEntryList(nullptr);
+    delete elistB;
+  } else {
+    nTot_B = t1b->GetEntries();
+    nSel_B = nTot_B;
+    cout << " Neighbour cut skipped for H2 background. Total background events: " << nTot_B << endl;
+  }
+  t1b->Project(h1name, "x.ene", tcutB);
+  
+  
+  
+    
 
 //GaussianKernel(t1b->Draw("ene", tcut, "goff"), t1b->GetV1(), h1); 
-
-  cout << " Entries0: " << h0->GetEntries() << endl;
-  cout << " Entries1: " << h1->GetEntries() << endl;
+  Long64_t nXrs_S = h0->GetEntries();
+  Long64_t nXrs_B =h1->GetEntries();
+  cout << " Entries S: " << h0->GetEntries() << endl;
+  cout << " Entries B: " << h1->GetEntries() << endl;
 
   h0->SetStats(0);
   h1->SetStats(0);
@@ -105,7 +144,7 @@ vector<Double_t> PlotEne(TString tag      = "RAL202304",
   Double_t trg1 = GetTriggersRR(tagB, reproB, batchB, lasercutB);
   cout << "Number of triggers for normalisation --> \tthis batch: " << trg0 << "\tref batch: " << trg1 << endl;
   h0->Scale(1./trg0);
-  h1->Scale(1./trg1);;
+  h1->Scale(1./trg1);
   
   cout << " region: " << Form("[%i, %i]", sign0, sign1) << endl;
 //  cout << " bgnd region: " << Form("[%i, %i]", bgnd0, bgnd1) << endl;
@@ -212,6 +251,9 @@ vector<Double_t> PlotEne(TString tag      = "RAL202304",
 //  }
    
   if (savehist){
+  
+    TTree meta("meta", "analysis metadata");
+  
     TFile * outfile= new TFile(c0name+".root", "RECREATE");
     h0->Write();
     h1->Write();

@@ -20,21 +20,25 @@ vector<Double_t> GetLambdaTrueRR( TString tag   = "RAL202305", // this function 
     TTree* t0 = (TTree*)ifile->Get("t1");
     if (!t0) {  ifile->Close(); delete ifile; return out; }
 
-    TH1D* htmp = new TH1D("htmp","",20000,6787.,6790.);
+    TH1D* htmp = new TH1D("htmp","",20000,6787.,6790.); 
     htmp->SetDirectory(nullptr);
     t0->Project("htmp","lwave",lasercut);
-    Double_t lambda = htmp->GetMean();
-    Double_t lambdaSigma = htmp->GetStdDev();
-    Double_t n     = htmp->GetEntries();
-    Double_t lambdaErr = lambdaSigma/sqrt(n);
+    
+    Double_t lambda       = htmp->GetMean();
+    Double_t lambdaSigma  = htmp->GetStdDev();
+    Double_t n            = htmp->GetEntries();
+    Double_t lambdaErr    = lambdaSigma/sqrt(n);
 
     out[0] = lambda;
+    out[1] = lambdaSigma;
     out[1] = lambdaErr;
 
-    if (debug)
+    if (debug) {
         cout << "lambda = " << lambda
-             << " +/- " << lambdaErr << endl;
-
+             << " +/- " << lambdaErr << "(sigma: " << lambdaSigma << ", n = " << n << ")" << endl;
+        cout << "Returned values: out = (" << out[0] << ", " << out[1] << ")" << endl;
+    }
+    
     delete htmp;
     ifile->Close();
     delete ifile;

@@ -59,7 +59,7 @@ void CalcRateBatch(TString tag      = "RAL202405",
   // setting up the output file tree
   TTree* tree = new TTree("tRate", "Rate batch results");
   UInt_t   t_batch;
-  Double_t t_lambdaAim;
+  Double_t t_lambdaExp;
   Double_t t_lambdaTrue;
   Double_t t_lambdaTrueErr;
   Double_t t_s0;
@@ -68,7 +68,7 @@ void CalcRateBatch(TString tag      = "RAL202405",
   Double_t t_yield;
   Double_t t_yieldErr;
   tree->Branch("batch",             &t_batch,         "batch/i");
-  tree->Branch("lambdaAim",         &t_lambdaAim,     "lambdaAim/D");
+  tree->Branch("lambdaExp",         &t_lambdaExp,     "lambdaExp/D");
   tree->Branch("lambdaTrue",        &t_lambdaTrue,    "lambdaTrue/D");
   tree->Branch("lambdaTrueErr",     &t_lambdaTrueErr, "lambdaTrueErr/D");
   tree->Branch("s0",                &t_s0,            "s0/D");
@@ -130,7 +130,7 @@ void CalcRateBatch(TString tag      = "RAL202405",
 		 
 		// filling the tree
 		t_batch         = batchS;
-    t_lambdaAim     = lambda;
+    t_lambdaExp     = lambda;
     t_lambdaTrue    = lambdaTrueVec[0];
     t_lambdaTrueErr = lambdaTrueVec[1];
     t_s0            = yVal0[np];
@@ -138,6 +138,7 @@ void CalcRateBatch(TString tag      = "RAL202405",
     t_trigRatio     = yVal1[np];
     t_yield         = yVal2[np];
     t_yieldErr      = yErr2[np];
+    
     tree->Fill();
 
   } ////////// END OF MAIN LOOP /////////////
