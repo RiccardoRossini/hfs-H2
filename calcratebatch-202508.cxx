@@ -1,8 +1,8 @@
 { UInt_t  repro    = 6;
-  UInt_t  ndet     = 300; // LaBr+MIB
+  UInt_t  ndet     = 300; // 300 = LaBr+MIB, 299 = never-moved, 230 = MIB, 10 = LaBr
   TString weight   = "w0*w1";
-  UInt_t  tmin     = 780; // Laser injection
-  UInt_t  tmax     = 2000; // Laser injection
+  UInt_t  tmin     = 780; // -1 = ltshot (laser injection)
+  UInt_t  tmax     = 2000; 
   UInt_t  bsys     = 0;
   Bool_t  draw     = 0; // set 1 to see plots (might crash...)
   UInt_t  brmsmax  = 1e7;

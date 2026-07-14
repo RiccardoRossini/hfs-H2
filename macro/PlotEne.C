@@ -1,3 +1,4 @@
+#include <Rtypes.h>
 
 vector<Double_t> PlotEne(TString tag      = "RAL202304",
 			 UInt_t  repro    = 5,
