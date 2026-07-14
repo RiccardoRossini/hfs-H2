@@ -1,6 +1,8 @@
 
 TString GetDetName(TString tag  = "RAL202305",		
 		   UInt_t  ndet = 0) {
+  
+  cout << "Extracting detector name for tag: " << tag << " ndet: " << ndet << endl;
 
   //From /opt/exp_software/famu/installed-2023/include/FHardConfig-2023-jul1724.h
   TString nameLaBr[ 6] = {"LaBr2","LaBr4","LaBr5","LaBr6","LaBr7","LaBr8"};
@@ -66,20 +68,19 @@ TString GetDetName(TString tag  = "RAL202305",
     nameMIB[27] = "MIB94";
     nameMIB[28] = "MIB95";
   }
-  else { cout << " ERROR! Unknown detector names for tag " << tag << endl; exit(0); }
+  else { cout << " GetDetName ERROR! Unknown detector names for tag " << tag << endl; exit(0); }
  
   TString detname;
   
   if      (ndet ==  10) detname = "LaBr";
-//else if (ndet == 230) detname = "MIB-B";
-//else if (ndet == 231) detname = "MIB-A";
-//else if (ndet == 232) detname = "MIB-C";
-  else if (ndet == 233) detname = "MIB";
+  else if (ndet == 230) detname = "MIB";
+  else if (ndet == 299) detname = "LaBr-MIB never moved";
   else if (ndet == 300) detname = "LaBr-MIB";
   else if (ndet <    6)               detname = nameLaBr[ndet];
   else if (ndet >= 200 && ndet < 230) detname = nameMIB [ndet%200];
-  else { cout << " ERROR! Unknown detector name for tag: " << tag << " ndet: " << ndet << endl; exit(0); }
+  else { cout << " GetDetName ERROR! Unknown detector name for tag: " << tag << " ndet: " << ndet << endl; exit(0); }
   
+  cout << "Detector name for tag: " << tag << " ndet: " << ndet << " is: " << detname << endl;
   return detname;
 }
 

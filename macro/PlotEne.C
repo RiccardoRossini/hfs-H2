@@ -65,14 +65,15 @@ vector<Double_t> PlotEne(TString tag      = "RAL202304",
   h1->Sumw2();
   h2->Sumw2();
 
+  TString detcut = GetDetCut(ndet);
 
-  TCut tcut = Form("%s*(x.brms<%i&&abs(x.base)<%i&&x.flag<%i&&x.delta>%i&&x.start>%i&&x.start<%i&&%s)",
-		   weight.Data(), brmsmax, basemax, flagmax, deltamin, start0, start1, lasercut.Data());
+  TCut tcut = Form("%s*(x.brms<%i&&abs(x.base)<%i&&x.flag<%i&&x.delta>%i&&x.start>%i&&x.start<%i&&%s&&%s)",
+		   weight.Data(), brmsmax, basemax, flagmax, deltamin, start0, start1, detcut.Data(), lasercut.Data());
 	
 	// we always need noLaser data for the background
 	TString lasercutB = "lphd==0";
-	TCut tcutB = Form("%s*(x.brms<%i&&abs(x.base)<%i&&x.flag<%i&&x.delta>%i&&x.start>%i&&x.start<%i&&%s)",
-		   weight.Data(), brmsmax, basemax, flagmax, deltamin, start0, start1, lasercutB.Data());
+	TCut tcutB = Form("%s*(x.brms<%i&&abs(x.base)<%i&&x.flag<%i&&x.delta>%i&&x.start>%i&&x.start<%i&&%s&&%s)",
+		   weight.Data(), brmsmax, basemax, flagmax, deltamin, start0, start1, detcut.Data(), lasercutB.Data());
   
   tcut.Print();
   tcutB.Print();

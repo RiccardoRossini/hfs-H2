@@ -1,5 +1,5 @@
 { UInt_t  repro    = 6;
-  UInt_t  ndet     = 300; // LaBr+MIB
+  UInt_t  ndet     = 299; // LaBr+MIB
   TString weight   = "w0*w1";
   UInt_t  tmin     = 780; // Laser injection
   UInt_t  tmax     = 2000; // Laser injection
