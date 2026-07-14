@@ -33,7 +33,7 @@ TEntryList* NeighbourCut(TTree* t, TString lasercut){
         t->GetEntry(i);
 
         // keep all laser events
-        if (lphd > 0) {
+        if (lasercut) {
             list->Enter(i);
             continue;
         }

@@ -98,7 +98,7 @@ vector<Double_t> PlotEne(TString tag      = "RAL202304",
   t1s->SetEntryList(nullptr);
   delete elistS;
   
-  // background (lonely-nL not applied to H2 data as there's no laser there!)
+  // background (neighbour cut not applied to H2 data as there's no laser there!)
   Bool_t skipNeighbour = (tagB == "RAL202303" && batchB == 6) || (tagB == "RAL202405" && batchB == 25) || (tagB == "RAL202509" && batchB == 33);
   if (!skipNeighbour) {
     TEntryList* elistB = NeighbourCut(t1b, goodlasercut);
