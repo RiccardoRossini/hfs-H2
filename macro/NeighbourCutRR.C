@@ -2,16 +2,10 @@
 TEntryList* NeighbourCut(TTree* t, TString lasercut){
     /*
      * NeighbourCut builds a TEntryList selecting events based on laser-neighbour logics.
-     *
      * Selection rules:
-     *  - all laser events (lphd > 0) are always kept
+     *  - all "good laser" events are always kept
      *  - no-laser events (lphd == 0) are kept only if at least one neighbouring event (i ± 1) is a "good laser"
-     *
-     * A "good laser" is defined as:
-     *  - lphd > 0
-     *  - satisfies the user-defined condition given in 'lasercut'
-     *
-     * The function does NOT apply any physics cuts (energy, timing, etc.), it returns a mask vector. 
+     * Good laser means that "lasercut" is True.
      */
 
     Long64_t n = t->GetEntries();
@@ -20,29 +14,44 @@ TEntryList* NeighbourCut(TTree* t, TString lasercut){
     t->SetBranchAddress("lphd", &lphd);
     TTreeFormula cutFormula("cut", lasercut, t);
 
+    Long64_t g=0, L=0, nL=0; // counters for good, good-laser, and good-no-laser events
+
     // mapping laser events (1 = goodLaser, 0 = noLaser and badLaser)
     std::vector<char> isGood(n, 0);
     for (Long64_t i = 0; i < n; ++i) {
         t->GetEntry(i);
         if (lphd > 0 && cutFormula.EvalInstance()) isGood[i] = 1;
+        g++;
     }
+    cout << " NeighbourCut: Total events: " << n << ", good laser events: " << g << endl;
+
+    // DEBUG: Print the first 200 values of the isGood vector
+    cout << " NeighbourCut check: first 200 values of the isGood vector: ";
+    for (Long64_t i = 0; i < std::min(n, 200LL); ++i) {
+        cout << static_cast<int>(isGood[i]) << " ";
+    }
+    cout << endl;
+    // END OF DEBUG
 
     // mark events i with lphd==0 AND a goodLaser in neighbouring event (i +/- 1)
     for (Long64_t i = 0; i < n; ++i) {
 
         t->GetEntry(i);
 
-        // keep all laser events
-        if (lasercut) {
+        // keep all good laser events
+        if (isGood[i]) {
             list->Enter(i);
-            continue;
+            L++;
         }
 
         // keep only no-laser events neighbouring a good laser
-        if ((i > 0     && isGood[i - 1]) ||
-            (i < n - 1 && isGood[i + 1])) {
+        else if ((i>0 && isGood[i-1]) || (i<n-1 && isGood[i+1])) {
             list->Enter(i);
+            nL++;
         }
     }
+
+    cout << " NeighbourCut: Total events: " << n << ", selected events: " << list->GetN() << endl;
+    cout << " NeighbourCut: L = " << L << ", nL = " << nL << endl;
     return list;
 }
