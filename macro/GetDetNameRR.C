@@ -74,7 +74,7 @@ TString GetDetName(TString tag  = "RAL202305",
   
   if      (ndet ==  10) detname = "LaBr";
   else if (ndet == 230) detname = "MIB";
-  else if (ndet == 299) detname = "LaBr-MIB never moved";
+  else if (ndet == 299) detname = "fixed det.";
   else if (ndet == 300) detname = "LaBr-MIB";
   else if (ndet <    6)               detname = nameLaBr[ndet];
   else if (ndet >= 200 && ndet < 230) detname = nameMIB [ndet%200];

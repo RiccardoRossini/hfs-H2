@@ -23,7 +23,7 @@
   TString   tag      = "RAL202304";
   
   // set the background batch 0=REF, 1=H2, other=custom
-  UInt_t    bckgrsel = 1;
+  UInt_t    bckgrsel = 0;
   TString   tagB;
   UInt_t    batchB;
   UInt_t    reproB = repro;

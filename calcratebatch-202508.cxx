@@ -1,5 +1,5 @@
 { UInt_t  repro    = 6;
-  UInt_t  ndet     = 300; // 300 = LaBr+MIB, 299 = never-moved, 230 = MIB, 10 = LaBr
+  UInt_t  ndet     = 299; // 300 = LaBr+MIB, 299 = never-moved, 230 = MIB, 10 = LaBr
   TString weight   = "w0*w1";
   UInt_t  tmin     = 780; // -1 = ltshot (laser injection)
   UInt_t  tmax     = 2000; 
@@ -23,7 +23,7 @@
   TString   tag      = "RAL202508";
   
   // set the background batch 0=REF, 1=H2, other=custom
-  UInt_t    bckgrsel = 1;
+  UInt_t    bckgrsel = 0;
   TString   tagB;
   UInt_t    batchB;
   UInt_t    reproB = repro;
