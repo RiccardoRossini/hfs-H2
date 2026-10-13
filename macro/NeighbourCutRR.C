@@ -1,12 +1,80 @@
 
-TEntryList* NeighbourCut(TTree* t, TString lasercut){
+TEntryList* NeighbourCut(TTree* t, TString lasercut)
+{
     /*
-     * NeighbourCut builds a TEntryList selecting events based on laser-neighbour logics.
-     * Selection rules:
-     *  - all "good laser" events are always kept
-     *  - no-laser events (lphd == 0) are kept only if at least one neighbouring event (i ± 1) is a "good laser"
-     * Good laser means that "lasercut" is True.
+     * Keep:
+     *   - all events satisfying lasercut (good laser)
+     *   - all no-laser events neighbouring a good-laser event
      */
+
+    Long64_t n = t->GetEntries();
+
+    auto list = new TEntryList();
+
+    TTreeFormula goodLaser("goodLaser", lasercut, t);
+    TTreeFormula lphdFormula("lphdFormula", "lphd", t);
+
+    std::vector<char> isGood(n, 0);
+
+    Long64_t g = 0;
+
+    // First pass: identify good laser events
+    for (Long64_t i = 0; i < n; ++i) {
+
+        t->LoadTree(i);
+
+        goodLaser.UpdateFormulaLeaves();
+        lphdFormula.UpdateFormulaLeaves();
+
+        t->GetEntry(i);
+
+        UInt_t lphd = (UInt_t)lphdFormula.EvalInstance();
+
+        if (lphd > 0 && goodLaser.EvalInstance()) {
+            isGood[i] = 1;
+            ++g;
+        }
+    }
+
+    cout << "NeighbourCut: total = " << n
+         << ", good laser = " << g << endl;
+
+    Long64_t L = 0;
+    Long64_t nL = 0;
+
+    // Second pass
+    for (Long64_t i = 0; i < n; ++i) {
+
+        t->LoadTree(i);
+        t->GetEntry(i);
+
+        if (isGood[i]) {
+            list->Enter(i);
+            ++L;
+        }
+        else if ((i > 0 && isGood[i-1]) ||
+                 (i < n-1 && isGood[i+1])) {
+            list->Enter(i);
+            ++nL;
+        }
+    }
+
+    cout << "NeighbourCut: selected = " << list->GetN() << endl;
+    cout << "NeighbourCut: L = " << L << " (" << L/(double)list->GetN()*100 << "%), nL = " << nL << " (" << nL/(double)list->GetN()*100 << "%)" << endl;
+
+    return list;
+}
+
+
+/*
+TEntryList* NeighbourCut(TTree* t, TString lasercut){
+    
+    // * NeighbourCut builds a TEntryList selecting events based on laser-neighbour logics.
+    // * Selection rules:
+    // *  - all "good laser" events are always kept
+    // *  - no-laser events (lphd == 0) are kept only if at least one neighbouring event (i ± 1) is a "good laser"
+    // * Good laser means that "lasercut" is True.
+     
 
     Long64_t n = t->GetEntries();
     auto list = new TEntryList();
@@ -20,8 +88,10 @@ TEntryList* NeighbourCut(TTree* t, TString lasercut){
     std::vector<char> isGood(n, 0);
     for (Long64_t i = 0; i < n; ++i) {
         t->GetEntry(i);
-        if (lphd > 0 && cutFormula.EvalInstance()) isGood[i] = 1;
-        g++;
+        if (lphd > 0 && cutFormula.EvalInstance()){ 
+            isGood[i] = 1;
+            g++;
+        }
     }
     cout << " NeighbourCut: Total events: " << n << ", good laser events: " << g << endl;
 
@@ -53,5 +123,10 @@ TEntryList* NeighbourCut(TTree* t, TString lasercut){
 
     cout << " NeighbourCut: Total events: " << n << ", selected events: " << list->GetN() << endl;
     cout << " NeighbourCut: L = " << L << ", nL = " << nL << endl;
+
+    t->SetBranchAddress("lphd", nullptr);
+//    t->ResetBranchAddresses();
+
     return list;
 }
+*/

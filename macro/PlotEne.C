@@ -25,6 +25,8 @@ vector<Double_t> PlotEne(TString tag      = "RAL202304",
 			 UInt_t  binw     = 4,
 			 Bool_t  savehist = 1) {
   
+  cout << "Beginning of PlotEne call." << endl;
+  
   gROOT->SetBatch(!draw);
 
   vector<Double_t> signVec;
@@ -34,15 +36,16 @@ vector<Double_t> PlotEne(TString tag      = "RAL202304",
   
   TString ifilenameS = gSystem->GetFromPipe(Form("ls data/famu/%s/ROOT/L3-RV%i/batch%i*/*.root | tail -n 1", tag.Data(),  repro,  batchS));
   TString ifilenameB = gSystem->GetFromPipe(Form("ls data/famu/%s/ROOT/L3-RV%i/batch%i*/*.root | tail -n 1", tagB.Data(), reproB, batchB));
-  
+
   if (gSystem->AccessPathName(ifilenameS)) { cout << " File not found: " << ifilenameS << endl; return signVec; }
   if (gSystem->AccessPathName(ifilenameB)) { cout << " File not found: " << ifilenameB << endl; return signVec; }
   
-  TFile* tfs = TFile::Open(ifilenameS, "READ"); TTree* t1s = (TTree*)tfs->Get("t1");
-  TFile* tfb = TFile::Open(ifilenameB, "READ"); TTree* t1b = (TTree*)tfb->Get("t1");
+  TFile* tfs = TFile::Open(ifilenameS, "READ"); 
+  TFile* tfb = TFile::Open(ifilenameB, "READ"); 
   
   cout << " ifilenameS: " << ifilenameS << endl;
   cout << " ifilenameB: " << ifilenameB << endl;
+  
   if (!tfs || tfs->IsZombie()) {
     cout << "ERROR opening file S" << endl;
     return signVec;
@@ -52,6 +55,25 @@ vector<Double_t> PlotEne(TString tag      = "RAL202304",
     return signVec;
   }
   
+  TTree* t1s = (TTree*)tfs->Get("t1");
+  TTree* t1b = (TTree*)tfb->Get("t1");
+  if (!t1s) {
+    cout << "ERROR: tree t1 missing in signal file" << endl;
+    tfs->Close();
+    delete tfs;
+    tfb->Close();
+    delete tfb;
+    return signVec;
+  }
+  if (!t1b) {
+    cout << "ERROR: tree t1 missing in background file" << endl;
+    tfs->Close();
+    delete tfs;
+    tfb->Close();
+    delete tfb;
+    return signVec;
+  }
+
   TString h0name = Form("h0_%i_%04i_%04i", bsys, start0, start1);
   TString h1name = Form("h1_%i_%04i_%04i", bsys, start0, start1);
   TString h2name = Form("h2_%i_%04i_%04i", bsys, start0, start1);
@@ -96,30 +118,26 @@ vector<Double_t> PlotEne(TString tag      = "RAL202304",
   cout << "Total signal events: " << nTot_S << endl;
   cout << "Signal events surviving neighbour nL cut: " << nSel_S << endl;
   t1s->Project(h0name, "x.ene", tcut);
-  t1s->SetEntryList(nullptr);
-  delete elistS;
   
   // background (neighbour cut not applied to H2 data as there's no laser there!)
   Bool_t skipNeighbour = (tagB == "RAL202303" && batchB == 6) || (tagB == "RAL202405" && batchB == 25) || (tagB == "RAL202509" && batchB == 33);
+  TEntryList* elistB = nullptr;
   if (!skipNeighbour) {
-    TEntryList* elistB = NeighbourCut(t1b, goodlasercut);
+    elistB = NeighbourCut(t1b, goodlasercut);
     nTot_B = t1b->GetEntries();
     t1b->SetEntryList(elistB);
     nSel_B = elistB->GetN();
     cout << " Total background events: " << nTot_B << endl;
     cout << " Background events surviving neighbour nL cut: " << nSel_B << endl;
-    t1b->SetEntryList(nullptr);
-    delete elistB;
   } else {
     nTot_B = t1b->GetEntries();
     nSel_B = nTot_B;
     cout << " Neighbour cut skipped for H2 background. Total background events: " << nTot_B << endl;
   }
   t1b->Project(h1name, "x.ene", tcutB);
+  // NB: after this point, t1s and t1b must be fed to functions and not retrieved from the files! 
   
   
-  
-    
 
 //GaussianKernel(t1b->Draw("ene", tcut, "goff"), t1b->GetV1(), h1); 
   Long64_t nXrs_S = h0->GetEntries();
@@ -141,9 +159,11 @@ vector<Double_t> PlotEne(TString tag      = "RAL202304",
   h1->SetFillStyle(3001);
   
   
-  Double_t trg0 = GetTriggersRR(tag,  repro,  batchS, lasercut);
-  Double_t trg1 = GetTriggersRR(tagB, reproB, batchB, lasercutB);
-  cout << "Number of triggers for normalisation --> \tthis batch: " << trg0 << "\tref batch: " << trg1 << endl;
+  Double_t errTrg0 = 0;
+  Double_t errTrg1 = 0;
+  Double_t trg0 = GetTriggersRR(t1s, lasercut, weight, &errTrg0);
+  Double_t trg1 = GetTriggersRR(t1b, lasercutB, weight, &errTrg1);
+  cout << "Number of triggers for normalisation --> \tthis batch: " << trg0 << " +/- " << errTrg0 << "\tref batch: " << trg1 << " +/- " << errTrg1 << endl;
   h0->Scale(1./trg0);
   h1->Scale(1./trg1);
   
@@ -260,6 +280,7 @@ vector<Double_t> PlotEne(TString tag      = "RAL202304",
     h1->Write();
     h2->Write();
     outfile->Close();
+    delete outfile;
     cout << "Saving hists in " << c0name << ".root" << endl;
   }
   
@@ -270,17 +291,33 @@ vector<Double_t> PlotEne(TString tag      = "RAL202304",
   */
   
   //da qui in poi non cambiare ordine delle cose o crasha tutto... 
-  
-  cout << "Clearing canvases/histograms/files for the current iteration.";
+//  cout << "Clearing trees for the current iteration." << endl;
+//  t1s->SetEntryList(nullptr); delete elistS;
+//  t1b->SetEntryList(nullptr); if (!skipNeighbour) delete elistB;
+  cout << "Deleting entry lists" << endl;
+  t1s->SetEntryList(nullptr);
+  delete elistS;
+  if (!skipNeighbour) {
+    t1b->SetEntryList(nullptr);
+    delete elistB;
+  }
+  cout << "Clearing histograms for the current iteration." << endl;
   h0->SetDirectory(nullptr);
   h1->SetDirectory(nullptr);
   h2->SetDirectory(nullptr);
+  cout << "Clearing canvases for the current iteration." << endl;
   c0->Close();  delete c0;
   c1->Close();  delete c1;
+  gROOT->GetListOfCanvases()->Clear();
   delete h0;  delete h1;  delete h2; 
-  tfs->Close();   delete tfs;
-  tfb->Close();   delete tfb;
-
+  cout << "Detatching and deleting trees." << endl;
+  tfs->Remove(t1s); delete t1s;
+  tfb->Remove(t1b); delete t1b;
+  cout << "Closing and deleting input files for the current iteration." << endl;
+  tfs->GetList()->ls();
+  tfs->Close();  // delete tfs;
+  tfb->Close();  // delete tfb;
  
+  cout << "End of PlotEne call: " << tag.Data() << " batch: " << batchS << endl;
   return signVec;
 }
