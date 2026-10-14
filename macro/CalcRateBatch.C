@@ -117,8 +117,6 @@ void CalcRateBatch(TString tag      = "RAL202405",
     // }
     // yVal1[np] = trgS / trgB;
     // yErr1[np] = yVal1[np] * sqrt(1.0/trgS + 1.0/trgB);
-    // yVal2[np] = yVal0[np]/yVal1[np]; // Oxygen X-rays per muon trigger
-    // yErr2[np] = yErr0[np]/yVal1[np];
 
 // New version
 // CalcRateBatch.C: delete the two GetTriggersRR calls and use
@@ -130,6 +128,9 @@ void CalcRateBatch(TString tag      = "RAL202405",
   }
   yVal1[np] = trgS / trgB;
   yErr1[np] = yVal1[np] * sqrt(pow(eTrgS/trgS, 2) + pow(eTrgB/trgB, 2));
+
+  yVal2[np] = yVal0[np]/yVal1[np]; // Oxygen X-rays per muon trigger
+  yErr2[np] = yErr0[np]/yVal1[np];
 
 //		auto lambdaTrueVec = GetLambdaTrueRR(tag, repro, batchS);
     

@@ -1,3 +1,48 @@
+// PlotEne: compares the energy spectrum of a signal batch with that of a reference batch
+// and returns the integral of the comparison over an energy window, plus the trigger
+// counts used for the normalisation.
+//
+// WHAT IT DOES
+//  1. Opens the tree t1 of the L3 ROOT file of the signal batch (tag, repro, batchS) and
+//     of the reference batch (tagB, reproB, batchB).
+//  2. Selects X-rays with weight*(brms, base, flag, delta, start-time window tmin-tmax,
+//     detector cut ndet, laser cut). The reference always uses lphd==0.
+//  3. Applies the neighbour cut (NeighbourCut, lphd>0) to the signal tree, and to the
+//     reference tree too unless it is a pure-H2 batch (skipNeighbour list), where there
+//     is no laser.
+//  4. Fills the energy histograms h0 (signal) and h1 (reference), with Sumw2.
+//  5. Computes the number of triggers T = sum of weights over the triggers passing the
+//     same trigger-level selection (laser cut + neighbour cut) as the X-rays, via
+//     GetTriggersRR, and scales each histogram by 1/T (X-rays per trigger).
+//  6. Integrates both histograms over the window [sign0, sign1] keV (histogram bins
+//     (sign0-bin0)/binw to (sign1-bin0)/binw, both inclusive) and builds either the
+//     ratio or the difference of the two integrals, depending on 'differ'.
+//  7. Saves the overlay and difference plots (pdf, png) and optionally the histograms
+//     (root file).
+//
+// UNCERTAINTIES
+//  - Integrals: sqrt(sum of squared weights) in the window, divided by T. T is treated as
+//    exact and the weights are exact. Signal and reference are treated as independent.
+//  - Ratio (differ=0):      errnorm = ratio * sqrt( (err0/int0)^2 + (err1/int1)^2 )
+//  - Difference (differ=1): sqrt( err0^2 + err1^2 )
+//  - The uncertainty on T is not included in the above (it is returned separately).
+//
+// RETURNS vector<Double_t> signVec of size 6 (all zeros if the function exits early,
+// e.g. file or tree not found):
+//   signVec[0] = ratio int0/int1 (differ=0) or difference int0-int1 (differ=1),
+//                where int0 and int1 are the per-trigger integrals of signal and reference
+//   signVec[1] = uncertainty on signVec[0]
+//   signVec[2] = trg0:    weighted number of triggers of the signal batch
+//   signVec[3] = errTrg0: sqrt(sum of squared weights) of the signal triggers
+//   signVec[4] = trg1:    weighted number of triggers of the reference batch
+//   signVec[5] = errTrg1: sqrt(sum of squared weights) of the reference triggers
+//
+// KEY PARAMETERS
+//   weight  : per-entry weight used both for X-rays and for the trigger count
+//             ("1" = unweighted)
+//   differ  : 0 = return the ratio, 1 = return the difference
+//   bsys    : 0 = nominal; 1, 2 = shifted ratio for a background-fluctuation systematic
+//   bin0, bin1, binw : histogram range and bin width in keV
 
 vector<Double_t> PlotEne(TString tag      = "RAL202304",
 			 UInt_t  repro    = 5,
@@ -29,10 +74,9 @@ vector<Double_t> PlotEne(TString tag      = "RAL202304",
   
   gROOT->SetBatch(!draw);
 
-  vector<Double_t> signVec;
-  
-  signVec.push_back(0);
-  signVec.push_back(0);
+  vector<Double_t> signVec(6, 0.); // output vector containing:
+
+
   
   TString ifilenameS = gSystem->GetFromPipe(Form("ls data/famu/%s/ROOT/L3-RV%i/batch%i*/*.root | tail -n 1", tag.Data(),  repro,  batchS));
   TString ifilenameB = gSystem->GetFromPipe(Form("ls data/famu/%s/ROOT/L3-RV%i/batch%i*/*.root | tail -n 1", tagB.Data(), reproB, batchB));
@@ -174,7 +218,7 @@ vector<Double_t> PlotEne(TString tag      = "RAL202304",
   cout << " region: " << Form("[%i, %i]", sign0, sign1) << endl;
 //  cout << " bgnd region: " << Form("[%i, %i]", bgnd0, bgnd1) << endl;
   
-  UInt_t sign0bin = (sign0-bin0)/binw;
+  UInt_t sign0bin = (sign0-bin0)/binw + 1;
   UInt_t sign1bin = (sign1-bin0)/binw;
 //  UInt_t bgnd0bin = (bgnd0-bin0)/binw;
 //  UInt_t bgnd1bin = (bgnd1-bin0)/binw;
