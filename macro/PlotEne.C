@@ -116,7 +116,7 @@ vector<Double_t> PlotEne(TString tag      = "RAL202304",
   t1s->SetEntryList(elistS);
   nSel_S = elistS->GetN();
   cout << "Total signal events: " << nTot_S << endl;
-  cout << "Signal events surviving neighbour nL cut: " << nSel_S << endl;
+  cout << "Signal events surviving neighbour nL cut: " << nSel_S << "(" << (double)nSel_S/nTot_S*100 << "%)" << endl;
   t1s->Project(h0name, "x.ene", tcut);
   
   // background (neighbour cut not applied to H2 data as there's no laser there!)
@@ -128,7 +128,7 @@ vector<Double_t> PlotEne(TString tag      = "RAL202304",
     t1b->SetEntryList(elistB);
     nSel_B = elistB->GetN();
     cout << " Total background events: " << nTot_B << endl;
-    cout << " Background events surviving neighbour nL cut: " << nSel_B << endl;
+    cout << " Background events surviving neighbour nL cut: " << nSel_B << "(" << (double)nSel_B/nTot_B*100 << "%)" << endl;
   } else {
     nTot_B = t1b->GetEntries();
     nSel_B = nTot_B;
@@ -164,6 +164,10 @@ vector<Double_t> PlotEne(TString tag      = "RAL202304",
   Double_t trg0 = GetTriggersRR(t1s, lasercut, weight, &errTrg0);
   Double_t trg1 = GetTriggersRR(t1b, lasercutB, weight, &errTrg1);
   cout << "Number of triggers for normalisation --> \tthis batch: " << trg0 << " +/- " << errTrg0 << "\tref batch: " << trg1 << " +/- " << errTrg1 << endl;
+  signVec[2] = trg0; 
+  signVec[3] = errTrg0;
+  signVec[4] = trg1; 
+  signVec[5] = errTrg1;
   h0->Scale(1./trg0);
   h1->Scale(1./trg1);
   
