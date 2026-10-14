@@ -108,17 +108,28 @@ void CalcRateBatch(TString tag      = "RAL202405",
     yErr0[np] = s0err;
 //    yErr0[np] = sqrt(pow(s0err, 2) + pow(sys, 2)); // Add systematic effect due to background fluctuations
 
-    Double_t trgS = GetTriggersRR(tag,  repro,  batchS, lasercut);
-    Double_t trgB = GetTriggersRR(tagB, reproB, batchB, lasercutB);
-    if (trgB==0){ // check denominator is not zero! 
-       cerr << "ERROR: zero triggers in reference sample\n" << "tagB=" << tagB << " reproB=" << reproB << " batchB=" << batchB << endl;
-       throw std::runtime_error("Zero reference triggers in background data");
-    }
-    yVal1[np] = trgS / trgB;
-    yErr1[np] = yVal1[np] * sqrt(1.0/trgS + 1.0/trgB);
-    
-    yVal2[np] = yVal0[np]/yVal1[np]; // Oxygen X-rays per muon trigger
-    yErr2[np] = yErr0[np]/yVal1[np];
+// Old version 
+    // Double_t trgS = GetTriggersRR(tag,  repro,  batchS, lasercut);
+    // Double_t trgB = GetTriggersRR(tagB, reproB, batchB, lasercutB);
+    // if (trgB==0){ // check denominator is not zero! 
+    //    cerr << "ERROR: zero triggers in reference sample\n" << "tagB=" << tagB << " reproB=" << reproB << " batchB=" << batchB << endl;
+    //    throw std::runtime_error("Zero reference triggers in background data");
+    // }
+    // yVal1[np] = trgS / trgB;
+    // yErr1[np] = yVal1[np] * sqrt(1.0/trgS + 1.0/trgB);
+    // yVal2[np] = yVal0[np]/yVal1[np]; // Oxygen X-rays per muon trigger
+    // yErr2[np] = yErr0[np]/yVal1[np];
+
+// New version
+// CalcRateBatch.C: delete the two GetTriggersRR calls and use
+  Double_t trgS = y0vec[2], eTrgS = y0vec[3];
+  Double_t trgB = y0vec[4], eTrgB = y0vec[5];
+  if (trgS == 0 || trgB == 0) {
+    cerr << "ERROR: zero triggers, batch " << batchS << endl;
+    throw std::runtime_error("Zero triggers");
+  }
+  yVal1[np] = trgS / trgB;
+  yErr1[np] = yVal1[np] * sqrt(pow(eTrgS/trgS, 2) + pow(eTrgB/trgB, 2));
 
 //		auto lambdaTrueVec = GetLambdaTrueRR(tag, repro, batchS);
     
