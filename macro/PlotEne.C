@@ -62,6 +62,7 @@ vector<Double_t> PlotEne(TString tag      = "RAL202304",
 			 UInt_t  deltamin = 0,
 			 TString label    = "Internal",
 			 TString lasercut = "lphd==0",
+       TString lasercutB= "lphd==0",  // we always need noLaser data for the background
 			 UInt_t  sign0    = 60,
 			 UInt_t  sign1    = 200,
 			 Bool_t  differ   = 0, // the value returned by PlotEne is: 0 = the ratio, 1 = the difference
@@ -136,8 +137,7 @@ vector<Double_t> PlotEne(TString tag      = "RAL202304",
   TCut tcut = Form("%s*(x.brms<%i&&abs(x.base)<%i&&x.flag<%i&&x.delta>%i&&x.start>%i&&x.start<%i&&%s&&%s)",
 		   weight.Data(), brmsmax, basemax, flagmax, deltamin, start0, start1, detcut.Data(), lasercut.Data());
 	
-	// we always need noLaser data for the background
-	TString lasercutB = "lphd==0";
+//	TString lasercutB = "lphd==0";
 	TCut tcutB = Form("%s*(x.brms<%i&&abs(x.base)<%i&&x.flag<%i&&x.delta>%i&&x.start>%i&&x.start<%i&&%s&&%s)",
 		   weight.Data(), brmsmax, basemax, flagmax, deltamin, start0, start1, detcut.Data(), lasercutB.Data());
   
@@ -228,6 +228,17 @@ vector<Double_t> PlotEne(TString tag      = "RAL202304",
 //  cout << " bgnd0bin: " << bgnd0bin << endl;
 //  cout << " bgnd1bin: " << bgnd1bin << endl;
 
+  // warning if bin boundaries are not multiples of binw:
+  if (((Int_t)sign0 - (Int_t)bin0) % (Int_t)binw != 0)
+    cout << "WARNING: sign0 = " << sign0 << " keV is not a multiple of binw = " << binw
+        << " keV from bin0 = " << bin0 << ": the integral starts at "
+        << bin0 + binw*(sign0bin - 1) << " keV." << endl;
+  if (((Int_t)sign1 - (Int_t)bin0) % (Int_t)binw != 0)
+    cout << "WARNING: sign1 = " << sign1 << " keV is not a multiple of binw = " << binw
+        << " keV from bin0 = " << bin0 << ": the integral ends at "
+        << bin0 + binw*sign1bin << " keV." << endl;
+
+        
   Double_t err0, err1;
   Double_t int0 = h0->IntegralAndError(sign0bin, sign1bin, err0); 
   Double_t int1 = h1->IntegralAndError(sign0bin, sign1bin, err1);

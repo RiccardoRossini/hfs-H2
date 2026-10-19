@@ -16,11 +16,7 @@ Double_t GetTriggersRR(TTree*    t,  // t: tree with the entry list (neighbour c
 
     t->SetEstimate(t->GetEntries() + 1);
 
-    Long64_t n = t->Draw(
-        "1",
-        Form("(%s)*(%s)", weight.Data(), lasercut.Data()),
-        "goff"
-    );
+    Long64_t n = t->Draw("1", Form("(%s)*(%s)", weight.Data(), lasercut.Data()), "goff");
 
     if (n < 0) {
         if (debug) cout << " GetTriggersRR: Draw failed" << endl;
@@ -41,8 +37,7 @@ Double_t GetTriggersRR(TTree*    t,  // t: tree with the entry list (neighbour c
     if (err) *err = uncertainty;
 
     if (debug) {
-        cout << " nTriggers: " << sum
-             << " +/- " << uncertainty << endl;
+        cout << " nTriggers: " << sum << " +/- " << uncertainty << endl;
     }
 
     return sum;

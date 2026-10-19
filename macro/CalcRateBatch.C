@@ -15,6 +15,7 @@ void CalcRateBatch(TString tag      = "RAL202405",
 		   UInt_t  flagmax  = 1e7,
 		   UInt_t  deltamin = 0,
 		   TString lasercut = "lphd==0",
+       TString lasercutB = "lphd==0",  // we always need noLaser data for the background
 		   TString label    = "Internal",
 		   UInt_t  sign0    = 60,
 			 UInt_t  sign1    = 200,
@@ -28,16 +29,16 @@ void CalcRateBatch(TString tag      = "RAL202405",
   Double_t* xVal  = new Double_t[nPoints];
   Double_t* yVal0 = new Double_t[nPoints];
   Double_t* yVal1 = new Double_t[nPoints];
-  Double_t* yVal2 = new Double_t[nPoints];
+//  Double_t* yVal2 = new Double_t[nPoints];
 
   Double_t* yErr0 = new Double_t[nPoints];
   Double_t* yErr1 = new Double_t[nPoints];
-  Double_t* yErr2 = new Double_t[nPoints];
+//  Double_t* yErr2 = new Double_t[nPoints];
   
 //  vector<Double_t> lambdaTrueVec[2];
   vector<Double_t> lambdaTrueVec = {0,0};     
   
-  TString lasercutB = "lphd==0";
+  
   
   // Setting up string variables
   
@@ -65,8 +66,12 @@ void CalcRateBatch(TString tag      = "RAL202405",
   Double_t t_s0;
   Double_t t_s0Err;
   Double_t t_trigRatio;
-  Double_t t_yield;
-  Double_t t_yieldErr;
+//  Double_t t_yield;
+//  Double_t t_yieldErr;
+  Double_t t_trigS;
+  Double_t t_trigSErr;
+  Double_t t_trigB;
+  Double_t t_trigBErr;
   tree->Branch("batch",             &t_batch,         "batch/i");
   tree->Branch("lambdaExp",         &t_lambdaExp,     "lambdaExp/D");
   tree->Branch("lambdaTrue",        &t_lambdaTrue,    "lambdaTrue/D");
@@ -74,8 +79,12 @@ void CalcRateBatch(TString tag      = "RAL202405",
   tree->Branch("s0",                &t_s0,            "s0/D");
   tree->Branch("s0err",             &t_s0Err,         "s0err/D");
   tree->Branch("trigRatio",         &t_trigRatio,     "trigRatio/D");
-  tree->Branch("yield",             &t_yield,         "yield/D");
-  tree->Branch("yieldErr",          &t_yieldErr,      "yieldErr/D");
+//  tree->Branch("yield",             &t_yield,         "yield/D");
+//  tree->Branch("yieldErr",          &t_yieldErr,      "yieldErr/D");
+  tree->Branch("trigS",    &t_trigS,    "trigS/D");
+  tree->Branch("trigSErr", &t_trigSErr, "trigSErr/D");
+  tree->Branch("trigB",    &t_trigB,    "trigB/D");
+  tree->Branch("trigBErr", &t_trigBErr, "trigBErr/D");
   
   
   
@@ -92,7 +101,8 @@ void CalcRateBatch(TString tag      = "RAL202405",
     
     xVal[np] = lambda;
 
-    vector<Double_t> y0vec = PlotEne(tag, repro, batchS, tagB, reproB, batchB, ndet, weight, tmin, tmax, bsys, draw, brmsmax, basemax, flagmax, deltamin, label, lasercut, sign0, sign1, differ);
+    vector<Double_t> y0vec = PlotEne(tag, repro, batchS, tagB, reproB, batchB, ndet, weight, tmin, tmax, bsys, draw, brmsmax, basemax, flagmax, deltamin, label, lasercut, lasercutB, sign0, sign1, differ);
+    if (y0vec.size() < 6) throw std::runtime_error("PlotEne returned fewer than 6 values");
     
     Double_t s0    = y0vec[0]; // Integral ratio of current batch wrt reference batch 
     Double_t s0err = y0vec[1];
@@ -129,15 +139,21 @@ void CalcRateBatch(TString tag      = "RAL202405",
   yVal1[np] = trgS / trgB;
   yErr1[np] = yVal1[np] * sqrt(pow(eTrgS/trgS, 2) + pow(eTrgB/trgB, 2));
 
-  yVal2[np] = yVal0[np]/yVal1[np]; // Oxygen X-rays per muon trigger
-  yErr2[np] = yErr0[np]/yVal1[np];
+//  yVal2[np] = yVal0[np]/yVal1[np]; // Oxygen X-rays per muon trigger
+//  yErr2[np] = yErr0[np]/yVal1[np];
 
 //		auto lambdaTrueVec = GetLambdaTrueRR(tag, repro, batchS);
-    
-    cout << Form(" ndet %03i %8s batch %02i wl %04.0f signal: %9.2f +/- %9.2f (%5.1f%%) triggers: %.0f", 
-		  ndet, detname.Data(), batchS, lambda,
-		  yVal0[np], yErr0[np], 100*yErr0[np]/yVal0[np],
-		  yVal1[np]) << endl;
+
+    cout << Form(" ndet %03i %8s batch %02i wl %04.0f signal: %9.2f +/- %9.2f (%5.1f%%) triggers: %.1f +/- %.1f",
+             ndet, detname.Data(), batchS, lambda,
+             yVal0[np], yErr0[np], 100*yErr0[np]/yVal0[np],
+             trgS, eTrgS) << endl;
+
+    // OLD version
+    //  cout << Form(" ndet %03i %8s batch %02i wl %04.0f signal: %9.2f +/- %9.2f (%5.1f%%) triggers: %.0f", 
+		//   ndet, detname.Data(), batchS, lambda,
+		//   yVal0[np], yErr0[np], 100*yErr0[np]/yVal0[np],
+		//   yVal1[np]) << endl;
 
 		 
 		// filling the tree
@@ -148,8 +164,12 @@ void CalcRateBatch(TString tag      = "RAL202405",
     t_s0            = yVal0[np];
     t_s0Err         = yErr0[np];
     t_trigRatio     = yVal1[np];
-    t_yield         = yVal2[np];
-    t_yieldErr      = yErr2[np];
+//    t_yield         = yVal2[np];
+//    t_yieldErr      = yErr2[np];
+    t_trigS         = trgS;   
+    t_trigSErr      = eTrgS;
+    t_trigB         = trgB;   
+    t_trigBErr      = eTrgB;
     
     tree->Fill();
 
@@ -171,6 +191,7 @@ void CalcRateBatch(TString tag      = "RAL202405",
   ofile->Write("", TObject::kOverwrite);
   ofile->Close();
 
+  /*
   delete[] xVal;
   delete[] yVal0;
   delete[] yVal1;
@@ -182,4 +203,5 @@ void CalcRateBatch(TString tag      = "RAL202405",
   delete g1;
   delete tree;
   delete ofile;  
+  */
 }

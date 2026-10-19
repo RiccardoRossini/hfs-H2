@@ -12,6 +12,7 @@
 //  TString label    = "Internal";
   UInt_t  nset     = 0;
   TString lasercut = "lphd==0";
+  TString lasercutB= "lphd==0";
   label = "";
   UInt_t  sign0    = 100;
   UInt_t  sign1    = 200;
@@ -44,6 +45,6 @@
   
 //ndet = 1; // LaBr
 
-  CalcRateBatch(tag, repro, tagB, reproB, batchB, ndet, weight, tmin, tmax, bsys, draw, brmsmax, basemax, flagmax, deltamin, lasercut, "Internal", sign0, sign1, differ);
+  CalcRateBatch(tag, repro, tagB, reproB, batchB, ndet, weight, tmin, tmax, bsys, draw, brmsmax, basemax, flagmax, deltamin, lasercut, lasercutB, "Internal", sign0, sign1, differ);
 
 }
