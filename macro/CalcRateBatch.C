@@ -15,7 +15,7 @@ void CalcRateBatch(TString tag      = "RAL202405",
 		   UInt_t  flagmax  = 1e7,
 		   UInt_t  deltamin = 0,
 		   TString lasercut = "lphd==0",
-       TString lasercutB = "lphd==0",  // we always need noLaser data for the background
+       TString lasercutB= "lphd==0",  // we always need noLaser data for the background
 		   TString label    = "Internal",
 		   UInt_t  sign0    = 60,
 			 UInt_t  sign1    = 200,
@@ -49,14 +49,14 @@ void CalcRateBatch(TString tag      = "RAL202405",
   weightName.ReplaceAll(".", "p");
 
   TString lcut = lasercut; //just a string for the file name, not a cut! 
-  lcut.Remove(0, lcut.Last('=') + 1); 
+  lcut.ReplaceAll("=", "");     // Equal
   lcut.ReplaceAll(">=", "GE");  // Greater or Equal
   lcut.ReplaceAll("<=", "LE");  // Less or Equal
   lcut.ReplaceAll(">",  "G");   // Greater
   lcut.ReplaceAll("<",  "L");   // Less
   
   // setting up and opening the output file
-  TString ofilename = Form("plots/calcratebatch/calcratebatch_%s-RV%i_lphd%s_ndet%03i_bsys%i_weight%s_t%04i-%04ins_ene%03i-%03ikeV_ref%s-RV%i-b%02i.root",
+  TString ofilename = Form("plots/calcratebatch/calcratebatch_%s-RV%i_%s_ndet%03i_bsys%i_weight%s_t%04i-%04ins_ene%03i-%03ikeV_ref%s-RV%i-b%02i.root",
 			   tag.Data(), repro, lcut.Data(), ndet, bsys, weightName.Data(), tmin, tmax, sign0, sign1, tagB.Data(), reproB, batchB);
   TFile* ofile = new TFile(ofilename, "RECREATE");
   cout << " ofilename: " << ofilename << endl;

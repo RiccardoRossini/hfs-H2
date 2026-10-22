@@ -261,13 +261,13 @@ vector<Double_t> PlotEne(TString tag      = "RAL202304",
   weightName.ReplaceAll(".", "p");
   
   TString lcut = lasercut;
-  lcut.Remove(0, lcut.Last('=') + 1);
+  lcut.ReplaceAll("=", "");     // Equal
   lcut.ReplaceAll(">=", "GE");  // Greater or Equal
   lcut.ReplaceAll("<=", "LE");  // Less or Equal
   lcut.ReplaceAll(">",  "G");   // Greater
   lcut.ReplaceAll("<",  "L");   // Less
   
-  TString c0name = Form("plots/plotene/plotene_%s-RV%i-b%02i_lphd%s_det%03i_bsys%i_weight%s_t%04i-%04ins_ene%03i-%03ikeV_ref%s-RV%i-b%02i", 
+  TString c0name = Form("plots/plotene/plotene_%s-RV%i-b%02i_%s_det%03i_bsys%i_weight%s_t%04i-%04ins_ene%03i-%03ikeV_ref%s-RV%i-b%02i", 
 			tag.Data(), repro, batchS, lcut.Data(), ndet, bsys, weightName.Data(), start0, start1, sign0, sign1, tagB.Data(), reproB, batchB);
   
   TCanvas* c0 = new TCanvas(c0name, c0name);
