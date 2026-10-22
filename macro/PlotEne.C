@@ -75,7 +75,7 @@ vector<Double_t> PlotEne(TString tag      = "RAL202304",
   
   gROOT->SetBatch(!draw);
 
-  vector<Double_t> signVec(6, 0.); // output vector containing:
+  vector<Double_t> signVec(8, 0.); // output vector containing:
 
 
   
@@ -151,7 +151,7 @@ vector<Double_t> PlotEne(TString tag      = "RAL202304",
   
   
   // remove noLaser not neighbouring good laser data and apply cuts
-  TString goodlasercut = "lphd>0";
+  TString goodlasercut = "(lphd>0 || ltshot>0)";
   Long64_t nTot_S, nSel_S, nTot_B, nSel_B;
   
   // signal

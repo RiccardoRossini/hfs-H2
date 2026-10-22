@@ -66,6 +66,7 @@ void CalcRateBatch(TString tag      = "RAL202405",
   Double_t t_s0;
   Double_t t_s0Err;
   Double_t t_trigRatio;
+  Double_t t_trigRatioErr;
 //  Double_t t_yield;
 //  Double_t t_yieldErr;
   Double_t t_trigS;
@@ -77,14 +78,15 @@ void CalcRateBatch(TString tag      = "RAL202405",
   tree->Branch("lambdaTrue",        &t_lambdaTrue,    "lambdaTrue/D");
   tree->Branch("lambdaTrueErr",     &t_lambdaTrueErr, "lambdaTrueErr/D");
   tree->Branch("s0",                &t_s0,            "s0/D");
-  tree->Branch("s0err",             &t_s0Err,         "s0err/D");
+  tree->Branch("s0Err",             &t_s0Err,         "s0Err/D");
   tree->Branch("trigRatio",         &t_trigRatio,     "trigRatio/D");
+  tree->Branch("trigRatioErr",      &t_trigRatioErr,  "trigRatioErr/D");
 //  tree->Branch("yield",             &t_yield,         "yield/D");
 //  tree->Branch("yieldErr",          &t_yieldErr,      "yieldErr/D");
-  tree->Branch("trigS",    &t_trigS,    "trigS/D");
-  tree->Branch("trigSErr", &t_trigSErr, "trigSErr/D");
-  tree->Branch("trigB",    &t_trigB,    "trigB/D");
-  tree->Branch("trigBErr", &t_trigBErr, "trigBErr/D");
+  tree->Branch("trigS",             &t_trigS,         "trigS/D");
+  tree->Branch("trigSErr",          &t_trigSErr,      "trigSErr/D");
+  tree->Branch("trigB",             &t_trigB,         "trigB/D");
+  tree->Branch("trigBErr",          &t_trigBErr,      "trigBErr/D");
   
   
   
@@ -164,6 +166,7 @@ void CalcRateBatch(TString tag      = "RAL202405",
     t_s0            = yVal0[np];
     t_s0Err         = yErr0[np];
     t_trigRatio     = yVal1[np];
+    t_trigRatioErr  = yErr1[np];
 //    t_yield         = yVal2[np];
 //    t_yieldErr      = yErr2[np];
     t_trigS         = trgS;   
@@ -178,7 +181,7 @@ void CalcRateBatch(TString tag      = "RAL202405",
   // setting up the output file graphs
   TGraphErrors* g0 = new TGraphErrors(nPoints, xVal, yVal0, NULL, yErr0);
   TGraphErrors* g1 = new TGraphErrors(nPoints, xVal, yVal1, NULL, yErr1);
-  TString xtitle = "Wavelength [pm] - 6788000";
+  TString xtitle = "Wavelength [pm] - 6788000 pm";
   g0->GetXaxis()->SetTitle(xtitle);
   g1->GetXaxis()->SetTitle(xtitle);
   g0->GetYaxis()->SetTitle(Form("Normalised integral ratio in [%i,%i] keV wrt. reference", sign0, sign1));
