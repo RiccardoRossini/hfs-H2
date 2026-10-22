@@ -2,13 +2,16 @@
 #include "/storage/gpfs_data/famu/riccardo/rootStyle/atlasstyle-00-04-02/AtlasUtils.C"
 #include "/storage/gpfs_data/famu/riccardo/rootStyle/atlasstyle-00-04-02/AtlasLabels.C"
 #include "/storage/gpfs_data/famu/riccardo/rootStyle/atlasstyle-00-04-02/FAMULabels.C"
-
-void DrawFileInfo(const TString& filename, double x, double y);
  
 /* this macro contains two functions: 
   - PlotRateBatch to plot variables from calcratebatch files as a function of the batch, giving those hists as output in a plotratebatch root file
+  - c0c1_PlotRateBatch, old version which extracts plots from the canvases and not from the tree [DEPRECATED]
   - ImportPlotRatio to plot the ratio between two histograms from different plotratebatch root files
+
+  - DrawFileInfo, utility to put the text on the plots
 */ 
+
+void DrawFileInfo(const TString& filename, double x, double y);
 
 void PlotRateBatch(TString PATH = "calcratebatch/RV6_lphd0_det300_bsys0_weightw0w1_t0780-2000ns_ene060-200keV_bckgr-H2/") {
 
