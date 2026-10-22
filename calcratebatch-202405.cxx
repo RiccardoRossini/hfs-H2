@@ -11,8 +11,8 @@
   UInt_t  deltamin = 0;
 //  TString label    = "Internal";
   UInt_t  nset     = 0;
-  TString lasercut = "lphd==0";
-  TString lasercutB= "lphd==0";
+  TString lasercut = "ltshot<1";
+  TString lasercutB= "ltshot<1";
   label = "";
   UInt_t  sign0    = 100;
   UInt_t  sign1    = 200;

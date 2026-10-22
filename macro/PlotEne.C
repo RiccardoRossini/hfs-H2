@@ -151,7 +151,7 @@ vector<Double_t> PlotEne(TString tag      = "RAL202304",
   
   
   // remove noLaser not neighbouring good laser data and apply cuts
-  TString goodlasercut = "(lphd>0 || ltshot>0)";
+  TString goodlasercut = "ltshot>=1"; //"lphd>0";
   Long64_t nTot_S, nSel_S, nTot_B, nSel_B;
   
   // signal
@@ -262,6 +262,10 @@ vector<Double_t> PlotEne(TString tag      = "RAL202304",
   
   TString lcut = lasercut;
   lcut.Remove(0, lcut.Last('=') + 1);
+  lcut.ReplaceAll(">=", "GE");  // Greater or Equal
+  lcut.ReplaceAll("<=", "LE");  // Less or Equal
+  lcut.ReplaceAll(">",  "G");   // Greater
+  lcut.ReplaceAll("<",  "L");   // Less
   
   TString c0name = Form("plots/plotene/plotene_%s-RV%i-b%02i_lphd%s_det%03i_bsys%i_weight%s_t%04i-%04ins_ene%03i-%03ikeV_ref%s-RV%i-b%02i", 
 			tag.Data(), repro, batchS, lcut.Data(), ndet, bsys, weightName.Data(), start0, start1, sign0, sign1, tagB.Data(), reproB, batchB);
