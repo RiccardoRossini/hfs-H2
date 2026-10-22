@@ -22,7 +22,7 @@
 *.root
 
 # Plots generated
-plots/
+plots/*
 *.png
 *.pdf
 *.jpg
@@ -43,3 +43,6 @@ condor/logs/*.err
 
 # Ignore generic calcratebatch current version
 calcratebatch.cxx
+
+# Keep PlotRateBatch.C under plots
+!plots/PlotRateBatch.C
