@@ -48,8 +48,12 @@ void CalcRateBatch(TString tag      = "RAL202405",
   weightName.ReplaceAll("*", "");
   weightName.ReplaceAll(".", "p");
 
-  TString lcut = lasercut;
-  lcut.Remove(0, lcut.Last('=') + 1); //just a string for the file name, not a cut! 
+  TString lcut = lasercut; //just a string for the file name, not a cut! 
+  lcut.Remove(0, lcut.Last('=') + 1); 
+  lcut.ReplaceAll(">=", "GE");  // Greater or Equal
+  lcut.ReplaceAll("<=", "LE");  // Less or Equal
+  lcut.ReplaceAll(">",  "G");   // Greater
+  lcut.ReplaceAll("<",  "L");   // Less
   
   // setting up and opening the output file
   TString ofilename = Form("plots/calcratebatch/calcratebatch_%s-RV%i_lphd%s_ndet%03i_bsys%i_weight%s_t%04i-%04ins_ene%03i-%03ikeV_ref%s-RV%i-b%02i.root",
