@@ -16,14 +16,15 @@ void DrawFileInfo(const TString& filename, double x, double y);
 void PlotRateBatch(TString PATH = "calcratebatch/RV6_lphd0_det300_bsys0_weightw0w1_t0780-2000ns_ene060-200keV_bckgr-H2/") {
 
     const int nGraphsPerFile = 3;
+    vector<TCanvas*> c(nGraphsPerFile);
+
 //    const TString names[nGraphsPerFile] = {"s0",    "trigRatio",    "trigS"};
     const TString yExpr[nGraphsPerFile] = {"s0",    "trigRatio",    "trigS"};
     const TString eExpr[nGraphsPerFile] = {"s0Err", "trigRatioErr", "trigSErr"};
     const TString ytitles[nGraphsPerFile] = {   "Normalised integral ratio wrt. reference",
                                                 "Ratio of #mu triggers wrt. reference",
                                                 "Triggers of the signal batch (weighted)"};
-    const TString names = yExpr
-    for (int j = 0; j < nGraphsPerFile; ++j) c[j] = new TCanvas(names[j], names[j], 800, 600);
+    for (int j = 0; j < nGraphsPerFile; ++j) c[j] = new TCanvas(yExpr[j], yExpr[j], 800, 600);
 
     if (!PATH.EndsWith("/")) PATH += "/";
     
@@ -82,12 +83,12 @@ void PlotRateBatch(TString PATH = "calcratebatch/RV6_lphd0_det300_bsys0_weightw0
                 gr = new TGraphErrors(t->GetSelectedRows(), t->GetV1(), t->GetV2(), nullptr, t->GetV3());
             }
             if (!gr) {
-                printf("Missing %s in %s\n", names[j].Data(), fileNamesVec[i].Data());
+                printf("Missing %s in %s\n", yExpr[j].Data(), fileNamesVec[i].Data());
                 f->Close();
                 continue;
             }
             if (!gr) {
-                printf("Missing %s in %s\n", names[j].Data(), fileNamesVec[i].Data());
+                printf("Missing %s in %s\n", yExpr[j].Data(), fileNamesVec[i].Data());
                 f->Close();
                 continue;
             }
@@ -127,10 +128,13 @@ void PlotRateBatch(TString PATH = "calcratebatch/RV6_lphd0_det300_bsys0_weightw0
            
             if (j == 0){ 
                 leg->AddEntry(gr, labels[i], "p");
-                gr->GetYaxis()->SetRangeUser(0.5, 1.6);   // Y range  
-            } else {
-                gr->GetYaxis()->SetRangeUser(0., 2.);   // Y range  
+                gr->GetYaxis()->SetRangeUser(0.5, 1.6);     // Y range  
+            } else if (j == 1) {
+                gr->GetYaxis()->SetRangeUser(0., 2.);       // Y range  
+            } else if (j == 2) {
+                gr->GetYaxis()->SetRangeUser(0., 3.5E6);     // Y range
             }
+            
 
             f->Close();
         }
@@ -140,7 +144,7 @@ void PlotRateBatch(TString PATH = "calcratebatch/RV6_lphd0_det300_bsys0_weightw0
         c[j]->Update();
     }
 
-        // Draw horizontal lines at y=1 on all canvases after all graphs are drawn
+        // Draw text and horizontal lines at y=1 on all canvases
     for (int j = 0; j < nGraphsPerFile; j++) {
         c[j]->cd();
         DrawFileInfo(fileNamesVec[0], 0.18, 0.92);
@@ -151,7 +155,7 @@ void PlotRateBatch(TString PATH = "calcratebatch/RV6_lphd0_det300_bsys0_weightw0
         line->SetLineColor(kRed);
         line->SetLineStyle(2); // dashed
         line->SetLineWidth(2);
-        line->Draw("same");
+        if (j!=2) line->Draw("same"); // no line for trigS
         c[j]->Update();
     }
     
@@ -163,10 +167,10 @@ void PlotRateBatch(TString PATH = "calcratebatch/RV6_lphd0_det300_bsys0_weightw0
     TString outName;
 
     for (int j = 0; j < nGraphsPerFile; ++j) {
-        outName = Form("plotratebatch/plotratebatch_%s-c%d.C", baseName.Data(), j);
+        outName = Form("plotratebatch/plotratebatch_%s-%s.C",   baseName.Data(), yExpr[j].Data());
         c[j]->SaveAs(outName);
         cout << "Saved " << outName << endl;
-        outName = Form("plotratebatch/plotratebatch_%s-c%d.png", baseName.Data(), j);
+        outName = Form("plotratebatch/plotratebatch_%s-%s.png", baseName.Data(), yExpr[j].Data());
         c[j]->SaveAs(outName);
         cout << "Saved " << outName << endl;
     }
@@ -213,7 +217,7 @@ void c0c1_PlotRateBatch(TString PATH = "calcratebatch/RV6_lphd0_det300_bsys0_wei
     std::vector<TString> labels   = {"OCT 2023", "DEC 2023", "JUL 2024", "SEP 2024", "OCT 2025", "NOV 2025"};
 
     // Create one canvas per graph type (each with unique name!)
-    TCanvas *c[nGraphsPerFile];
+    std::vector<TCanvas*> c(nGraphsPerFile);
     for (int j = 0; j < nGraphsPerFile; ++j)
         c[j] = new TCanvas(Form("c%d", j), Form("Graph g%d", j), 800, 600);
 
@@ -516,7 +520,7 @@ void DrawFileInfo(const TString& filename, double x = 0.12, double y = 0.88)
     // --- Final text ---
     TString line1 = "#bf{FAMU} Internal";
     //TString line2 = weight + trange;
-    TString line2 = "weights: " weight + ", " + trange + " #times " + erange;
+    TString line2 = "weights: " + weight + ", " + trange + " #times " + erange;
     TString line3;
     if (ref == "RAL202303" && batch == "06") line3 = "Reference H_{2}";
     else line3 = Form("Reference %s batch %s", ref.Data(), batch.Data());
