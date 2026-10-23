@@ -34,6 +34,9 @@ data/
 condor/logs/*.log
 condor/logs/*.out
 condor/logs/*.err
+condor/per_det*.log
+condor/per_det*.out
+condor/per_det*.err
 
 # Keep condor submit files
 !condor/*.sub

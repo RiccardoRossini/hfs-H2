@@ -1,0 +1,12 @@
+universe = vanilla
+executable = /storage/gpfs_data/famu/riccardo/analysis/hfs-H2/condor/per_det/launch.sh
+arguments  = $(period)
+environment = "NDET=$(ndet)"
+output = /storage/gpfs_data/famu/riccardo/analysis/hfs-H2/condor/per_det/logs/log_$(period)_ndet$(ndet)_$(Cluster)_$(Process).out
+error  = /storage/gpfs_data/famu/riccardo/analysis/hfs-H2/condor/per_det/logs/log_$(period)_ndet$(ndet)_$(Cluster)_$(Process).err
+log    = /storage/gpfs_data/famu/riccardo/analysis/hfs-H2/condor/per_det/logs/log_$(period)_ndet$(ndet)_$(Cluster)_$(Process).log
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+getenv = True
+primary_unix_group = famu
+queue period,ndet from det299_periodALL.txt

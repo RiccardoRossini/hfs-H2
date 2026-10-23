@@ -1,0 +1,61 @@
+# HTCondor launch of CalcRateBatch (one job per period and detector)
+
+## What this does
+Each job runs `calcratebatch-<period>.cxx` for ONE period and ONE detector. The detector
+is passed through the environment variable `NDET`, set by HTCondor for each job. The
+steering scripts read it with a default:
+
+    UInt_t ndet = gSystem->Getenv("NDET") ? atoi(gSystem->Getenv("NDET")) : 299;
+
+If `NDET` is not set (e.g. running the macro by hand), the default (299 in this example) is used.
+All other parameters (weight, time window, energy window, reference batch...) stay in the
+steering scripts, so every job uses the same settings.
+
+## Files
+- `submitlaunch.sub`   : the HTCondor submit file. Its last line selects the list of jobs.
+- `launch.sh`    : the script run by each job. Takes the period as argument, sources
+                   `set_FAMU_env-<period>-RV5.sh` and runs `root -b -q calcratebatch-<period>.cxx`.
+- `det(...)_period(...)*.txt`   : lists of jobs, one per line, in the form `<period> <ndet>`
+                   (e.g. `202304 12`). Different versions for different selections.
+
+## Quick start
+1. Check that the output folders exist and do not contain files directly (only in sub-directories): `plots/calcratebatch/` and `plots/plotene/`.
+2. Check that `NDET` is not set in your shell: `echo $NDET` (should be empty;
+   otherwise `unset NDET`).
+3. Submit: `condor_submit submit.sub`.
+
+## Switching between job lists
+The list is chosen in the LAST line of `submit.sub`:
+
+    queue period,ndet from jobs_all.txt
+
+To use another list, change the file name, for example:
+
+    queue period,ndet from jobs_other.txt
+
+
+## Creating a list
+All periods and detectors:
+
+    for p in 202304 202305 202404 202405 202508 202509; do
+      for d in $(seq 0 5) $(seq 200 227); do echo "$p $d"; done
+    done > jobs_all.txt
+
+## Monitoring
+- `condor_q`               : jobs grouped in one batch line (idle/running/held counts)
+- `condor_q -nobatch`      : one line per job
+- `condor_q -better-analyze <Cluster>.<Process>` : why a job is idle
+- `condor_rm <Cluster>`    : remove all jobs of a submission
+- Logs: `../logs/log_<period>_ndet<N>_<Cluster>_<Process>.{out,err,log}`
+
+## If jobs fail
+1. Look at the `.err` and `.out` files in `logs/`. A missing detector or batch makes
+   CalcRateBatch stop with "Zero triggers".
+2. Write the failed `<period> <ndet>` lines to `jobs_retry.txt`.
+3. Set the last line of `submit.sub` to `queue period,ndet from jobs_retry.txt` and resubmit.
+
+## Notes
+- Start with one period (`jobs_202304.txt`) before submitting everything: each job writes
+  many small plot files and can load the storage.
+- To limit how many jobs run at once, add `max_materialize = 50` to `submit.sub`.
+- Output files contain `ndet` in their names, so parallel jobs do not overwrite each other.
