@@ -2,10 +2,11 @@
 #include "/storage/gpfs_data/famu/riccardo/rootStyle/atlasstyle-00-04-02/AtlasUtils.C"
 #include "/storage/gpfs_data/famu/riccardo/rootStyle/atlasstyle-00-04-02/AtlasLabels.C"
 #include "/storage/gpfs_data/famu/riccardo/rootStyle/atlasstyle-00-04-02/FAMULabels.C"
+#include "/storage/gpfs_data/famu/riccardo/analysis/hfs-H2/macro/GetDetNameRR.C"
  
 /* this macro contains two functions: 
   - PlotRateBatch to plot variables from calcratebatch files as a function of the batch, giving those hists as output in a plotratebatch root file
-  - c0c1_PlotRateBatch, old version which extracts plots from the canvases and not from the tree [DEPRECATED]
+  - c0c1_PlotRateBatch, old version which extracts plots from the canvases and not from the tree [DEPRECATED but to be used for vers <= 20261020]
   - ImportPlotRatio to plot the ratio between two histograms from different plotratebatch root files
 
   - DrawFileInfo, utility to put the text on the plots
@@ -15,16 +16,21 @@ void DrawFileInfo(const TString& filename, double x, double y);
 
 void PlotRateBatch(TString PATH = "calcratebatch/RV6_lphd0_det300_bsys0_weightw0w1_t0780-2000ns_ene060-200keV_bckgr-H2/") {
 
-    const int nGraphsPerFile = 3;
+    const UInt_t nYvarPerFile = 3;
+    const UInt_t nXvarPerFile = 2;
+    const UInt_t nGraphsPerFile = nYvarPerFile*nXvarPerFile;
     vector<TCanvas*> c(nGraphsPerFile);
 
 //    const TString names[nGraphsPerFile] = {"s0",    "trigRatio",    "trigS"};
-    const TString yExpr[nGraphsPerFile] = {"s0",    "trigRatio",    "trigS"};
-    const TString eExpr[nGraphsPerFile] = {"s0Err", "trigRatioErr", "trigSErr"};
-    const TString ytitles[nGraphsPerFile] = {   "Normalised integral ratio wrt. reference",
+    const TString yExpr[nYvarPerFile] = {"s0",    "trigRatio",    "trigS"};
+    const TString eExpr[nYvarPerFile] = {"s0Err", "trigRatioErr", "trigSErr"};
+    const TString xExpr[nXvarPerFile] = {"lambdaExp", "batch"};
+    const TString xTitles[nYvarPerFile] = {   "Wavelength [pm] - 6788000",
+                                                "Batch number"};
+    const TString yTitles[nYvarPerFile] = {   "Normalised integral ratio wrt. reference",
                                                 "Ratio of #mu triggers wrt. reference",
                                                 "Triggers of the signal batch (weighted)"};
-    for (int j = 0; j < nGraphsPerFile; ++j) c[j] = new TCanvas(yExpr[j], yExpr[j], 800, 600);
+    for (int j = 0; j < nGraphsPerFile; ++j) c[j] = new TCanvas(Form("c%d", j), "", 800, 600);
 
     if (!PATH.EndsWith("/")) PATH += "/";
     
@@ -66,97 +72,113 @@ void PlotRateBatch(TString PATH = "calcratebatch/RV6_lphd0_det300_bsys0_weightw0
     leg->SetTextSize(0.03);
 
     // === Loop over graph types (g0, g1, g2) ===
-    for (int j = 0; j < nGraphsPerFile; ++j) {
+    UInt_t idxcanvas=0;
+    for (int h = 0; h < nYvarPerFile; ++h) {
+        for (int k = 0; k < nXvarPerFile; ++k){
 
-        for (int i = 0; i < nFiles; ++i) {
+            for (int i = 0; i < nFiles; ++i) {
 
-            TFile *f = TFile::Open(fileNamesVec[i]);
-            if (!f || f->IsZombie()) {
-                printf("Cannot open %s\n", fileNamesVec[i].Data());
-                continue;
-            }
+                TFile *f = TFile::Open(fileNamesVec[i]);
+                if (!f || f->IsZombie()) {
+                    printf("Cannot open %s\n", fileNamesVec[i].Data());
+                    continue;
+                }
 
-            // Data retrieval (using Draw() with opt. "goff" to avoid plotting)
-            TTree *t = (TTree*)f->Get("tRate");
-            TGraphErrors *gr = nullptr;
-            if (t && t->Draw(Form("lambdaExp:%s:%s", yExpr[j].Data(), eExpr[j].Data()), "", "goff") > 0){
-                gr = new TGraphErrors(t->GetSelectedRows(), t->GetV1(), t->GetV2(), nullptr, t->GetV3());
-            }
-            if (!gr) {
-                printf("Missing %s in %s\n", yExpr[j].Data(), fileNamesVec[i].Data());
+                // Data retrieval (using Draw() with opt. "goff" to avoid plotting)
+                TTree *t = (TTree*)f->Get("tRate");
+                TGraphErrors *gr = nullptr;
+                if (t && t->Draw(Form("%s:%s:%s", xExpr[k].Data(), yExpr[h].Data(), eExpr[h].Data()), "", "goff")){
+                    gr = new TGraphErrors(t->GetSelectedRows(), t->GetV1(), t->GetV2(), nullptr, t->GetV3());
+                }
+                if (!gr) {
+                    printf("Missing %s in %s\n", yExpr[h].Data(), fileNamesVec[i].Data());
+                    f->Close();
+                    continue;
+                }
+                if (!gr) {
+                    printf("Missing %s in %s\n", yExpr[h].Data(), fileNamesVec[i].Data());
+                    f->Close();
+                    continue;
+                }
+
+                gr->SetTitle("");
+                gr->SetMarkerStyle(markerStyles[i]);
+                gr->SetMarkerColor(colors[i]);
+                gr->SetLineColor(colors[i]);
+                gr->SetMarkerSize(1.2);
+                gr->GetXaxis()->SetTitle(xTitles[k]);
+                gr->GetYaxis()->SetTitle(yTitles[h]);
+                
+                cout << "File " << fileNamesVec[i] << " g" << h << "\t" << gr->GetN() << " data points" << endl; 
+
+                c[idxcanvas]->cd();
+                c[idxcanvas]->SetGrid();
+                
+                
+                if (i == 0) { 
+                    gr->Draw("AP");
+                } else {
+                    gr->Draw("P SAME");
+                }
+                
+                gr->GetYaxis()->SetTitleSize(0.04);
+                // move the plot up-right
+                c[idxcanvas]->SetLeftMargin(0.15);
+                c[idxcanvas]->SetRightMargin(0.05);
+                c[idxcanvas]->SetTopMargin(0.05);
+                c[idxcanvas]->SetBottomMargin(0.15);
+                // move the legend accordingly 
+                leg->SetX1NDC(0.75);
+                leg->SetY1NDC(0.75);
+                leg->SetX2NDC(0.95);
+                leg->SetY2NDC(0.95);
+            
+                if (h == 0){ 
+                    if (k == 0) leg->AddEntry(gr, labels[i], "p");
+                    gr->GetYaxis()->SetRangeUser(0.5, 1.6);     // Y range  
+                } else if (h == 1) {
+                    gr->GetYaxis()->SetRangeUser(0., 2.);       // Y range  
+                } else if (h == 2) {
+                    gr->GetYaxis()->SetRangeUser(0., 3.5E6);    // Y range
+                }
+
+                if (k == 0){
+                    gr->GetXaxis()->SetLimits(-50, 1200);       // X range
+                } else if (k == 1){
+                    gr->GetXaxis()->SetLimits(-1, 40);       // X range
+                }
+
                 f->Close();
-                continue;
-            }
-            if (!gr) {
-                printf("Missing %s in %s\n", yExpr[j].Data(), fileNamesVec[i].Data());
-                f->Close();
-                continue;
             }
 
-            gr->SetTitle("");
-            gr->SetMarkerStyle(markerStyles[i]);
-            gr->SetMarkerColor(colors[i]);
-            gr->SetLineColor(colors[i]);
-            gr->SetMarkerSize(1.2);
-            gr->GetXaxis()->SetTitle("Wavelength [pm] - 6788000");
-            gr->GetYaxis()->SetTitle(ytitles[j]);
-            
-            cout << "File " << fileNamesVec[i] << " g" << j << "\t" << gr->GetN() << " data points" << endl; 
 
-            c[j]->cd();
-            c[j]->SetGrid();
-            
-            
-            if (i == 0) { 
-                gr->Draw("AP");
-            } else {
-                gr->Draw("P SAME");
-            }
-            
-            gr->GetXaxis()->SetLimits(-50, 1200);     // X range
-            gr->GetYaxis()->SetTitleSize(0.04);
-            // move the plot up-right
-            c[j]->SetLeftMargin(0.15);
-            c[j]->SetRightMargin(0.05);
-            c[j]->SetTopMargin(0.05);
-            c[j]->SetBottomMargin(0.15);
-            // move the legend accordingly 
-            leg->SetX1NDC(0.75);
-            leg->SetY1NDC(0.75);
-            leg->SetX2NDC(0.95);
-            leg->SetY2NDC(0.95);
-           
-            if (j == 0){ 
-                leg->AddEntry(gr, labels[i], "p");
-                gr->GetYaxis()->SetRangeUser(0.5, 1.6);     // Y range  
-            } else if (j == 1) {
-                gr->GetYaxis()->SetRangeUser(0., 2.);       // Y range  
-            } else if (j == 2) {
-                gr->GetYaxis()->SetRangeUser(0., 3.5E6);     // Y range
-            }
-            
+            c[idxcanvas]->cd();
+            leg->Draw();
+            c[idxcanvas]->Update();
 
-            f->Close();
+            idxcanvas++;
         }
-
-        c[j]->cd();
-        leg->Draw();
-        c[j]->Update();
     }
 
         // Draw text and horizontal lines at y=1 on all canvases
-    for (int j = 0; j < nGraphsPerFile; j++) {
-        c[j]->cd();
-        DrawFileInfo(fileNamesVec[0], 0.18, 0.92);
-        c[j]->Update(); // ensure axes are set
-            
-                    
-        TLine* line = new TLine(c[j]->GetUxmin(), 1, c[j]->GetUxmax(), 1);
-        line->SetLineColor(kRed);
-        line->SetLineStyle(2); // dashed
-        line->SetLineWidth(2);
-        if (j!=2) line->Draw("same"); // no line for trigS
-        c[j]->Update();
+idxcanvas=0;
+    for (int h = 0; h < nYvarPerFile; ++h) {
+        for (int k = 0; k < nXvarPerFile; ++k){
+
+            c[idxcanvas]->cd();
+            DrawFileInfo(fileNamesVec[0], 0.18, 0.92);
+            c[idxcanvas]->Update(); // ensure axes are set
+                
+                        
+            TLine* line = new TLine(c[idxcanvas]->GetUxmin(), 1, c[idxcanvas]->GetUxmax(), 1);
+            line->SetLineColor(kRed);
+            line->SetLineStyle(2); // dashed
+            line->SetLineWidth(2);
+            if (h!=2) line->Draw("same"); // no line for trigS
+            c[idxcanvas]->Update();
+
+            idxcanvas++;
+        }
     }
     
     // === Save canvases and histograms in the same path as the files ===
@@ -166,13 +188,17 @@ void PlotRateBatch(TString PATH = "calcratebatch/RV6_lphd0_det300_bsys0_weightw0
 
     TString outName;
 
-    for (int j = 0; j < nGraphsPerFile; ++j) {
-        outName = Form("plotratebatch/plotratebatch_%s-%s.C",   baseName.Data(), yExpr[j].Data());
-        c[j]->SaveAs(outName);
-        cout << "Saved " << outName << endl;
-        outName = Form("plotratebatch/plotratebatch_%s-%s.png", baseName.Data(), yExpr[j].Data());
-        c[j]->SaveAs(outName);
-        cout << "Saved " << outName << endl;
+    idxcanvas=0;
+    for (int h = 0; h < nYvarPerFile; ++h) {
+        for (int k = 0; k < nXvarPerFile; ++k){
+            outName = Form("plotratebatch/plotratebatch_%s-%s_%s.C", baseName.Data(), xExpr[k].Data(), yExpr[h].Data());
+            c[idxcanvas]->SaveAs(outName);
+            cout << "Saved " << outName << endl;
+            outName = Form("plotratebatch/plotratebatch_%s-%s_%s.png", baseName.Data(), xExpr[k].Data(), yExpr[h].Data());
+            c[idxcanvas]->SaveAs(outName);
+            cout << "Saved " << outName << endl;
+            idxcanvas++;
+        }
     }
 
 }
@@ -389,7 +415,7 @@ void PlotRatioFromCanvases(TCanvas* cNum, TCanvas* cDen, TString canvasName="cRa
             if (TMath::Abs(xNum - xDen) > 1e-6) continue;
 
             double ex = gNum->GetErrorX(j);
-            double ey = (yDen != 0) ? (yNum/yDen)*sqrt(pow(gNum->GetErrorY(j)/yNum,2)+pow(gDen->GetErrorY(j)/yDen,2)) : 0;
+            double ey = (yDen != 0) ? (yNum/yDen)*sqrt(pow(gNum->GetErrorY(j)/yNum,2.)+pow(gDen->GetErrorY(j)/yDen,2.)) : 0;
 
             gRatio->SetPoint(j, xNum, (yDen!=0)?yNum/yDen:0);
             gRatio->SetPointError(j, ex, ey);
@@ -515,12 +541,22 @@ void DrawFileInfo(const TString& filename, double x = 0.12, double y = 0.88)
         if (end == kNPOS) end = filename.Length();
         rv = filename(posRV + 1, end - posRV -1);
     }
+
+    // --- Extract detector number ---
+    UInt_t det = 0;
+    Ssiz_t posDet = filename.Index("_ndet");
+    if (posDet != kNPOS) {
+        Ssiz_t end = filename.Index("_", posDet + 5);
+        if (end == kNPOS) end = filename.Length();
+        det = (UInt_t)TString(filename(posDet + 5, end - (posDet + 5))).Atoi();
+    }
     
 
     // --- Final text ---
-    TString line1 = "#bf{FAMU} Internal";
+    TString line0 = "#bf{FAMU} Internal";
     //TString line2 = weight + trange;
-    TString line2 = "weights: " + weight + ", " + trange + " #times " + erange;
+    TString line1 = GetDetName("RAL202304", det);
+    TString line2 = "weights: " + weight + "," + trange + " #times " + erange;
     TString line3;
     if (ref == "RAL202303" && batch == "06") line3 = "Reference H_{2}";
     else line3 = Form("Reference %s batch %s", ref.Data(), batch.Data());
@@ -535,9 +571,10 @@ void DrawFileInfo(const TString& filename, double x = 0.12, double y = 0.88)
     latex.SetTextSize(22);  // in pixel
 
 
-    latex.DrawLatex(x, y,        line1);
-    latex.DrawLatex(x, y - 0.05, line2);
-    latex.DrawLatex(x, y - 0.10, line3);
+    latex.DrawLatex(x, y,        line0);
+    latex.DrawLatex(x, y - 0.05, line1);
+    latex.DrawLatex(x, y - 0.10, line2);
+    latex.DrawLatex(x, y - 0.15, line3);
 }
 
 
