@@ -58,15 +58,16 @@ TString GetDetName(TString tag  = "RAL202305",
     nameMIB[12] = "MIB75";
     nameMIB[13] = "MIB77";
 
-    nameMIB[21] = "MIB100";
-    nameMIB[22] = "MIB205";
+    nameMIB[21] = "MIB26";
+    nameMIB[22] = "MIB100";
+    nameMIB[23] = "MIB205";
     
-    nameMIB[23] = "MIB90";
-    nameMIB[24] = "MIB91";
-    nameMIB[25] = "MIB92";
-    nameMIB[26] = "MIB93";
-    nameMIB[27] = "MIB94";
-    nameMIB[28] = "MIB95";
+    nameMIB[24] = "MIB90";
+    nameMIB[25] = "MIB91";
+    nameMIB[26] = "MIB92";
+    nameMIB[27] = "MIB93";
+    nameMIB[28] = "MIB94";
+    nameMIB[29] = "MIB95";
   }
   else { cout << " GetDetName ERROR! Unknown detector names for tag " << tag << endl; exit(0); }
  
