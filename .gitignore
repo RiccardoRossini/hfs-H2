@@ -47,5 +47,6 @@ condor/per_det/logs/*.err
 # Ignore generic calcratebatch current version
 calcratebatch.cxx
 
-# Keep PlotRateBatch.C under plots
+# Keep .C macros under plots
 !plots/PlotRateBatch.C
+!plots/RatioFromCFiles.C

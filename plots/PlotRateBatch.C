@@ -192,6 +192,7 @@ idxcanvas=0;
     for (int h = 0; h < nYvarPerFile; ++h) {
         for (int k = 0; k < nXvarPerFile; ++k){
             outName = Form("plotratebatch/plotratebatch_%s-%s_%s.C", baseName.Data(), xExpr[k].Data(), yExpr[h].Data());
+            outName.ReplaceAll("-", "_"); // remove dashes in the .C version (otherwise the function has a bad name)
             c[idxcanvas]->SaveAs(outName);
             cout << "Saved " << outName << endl;
             outName = Form("plotratebatch/plotratebatch_%s-%s_%s.png", baseName.Data(), xExpr[k].Data(), yExpr[h].Data());
