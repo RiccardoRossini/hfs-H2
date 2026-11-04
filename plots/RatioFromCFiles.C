@@ -162,10 +162,12 @@ TCanvas* RatioFromCFiles(
     // ---- axes: limits and titles from the type of plot (the first graph drawn defines the axes) ----
     TString fname1 = gSystem->BaseName(file1);
     TGraphErrors* g0 = ratioGraphs[0];
-    if (fname1.Contains("_lambda")) {
+    if (fname1.Contains("lambda")) {
+        cout << "Filename " << fname1.Data() << " contains lambda" << endl;
         g0->GetXaxis()->SetLimits(-50, 1200);
         g0->GetXaxis()->SetTitle("Wavelength [pm] - 6788000");
-    } else if (fname1.Contains("_batch_")) {
+    } else if (fname1.Contains("batch")) {
+        cout << "Filename " << fname1.Data() << " contains batch" << endl;
         g0->GetXaxis()->SetLimits(-1, 40);
         g0->GetXaxis()->SetTitle("Batch number");
     } else {
