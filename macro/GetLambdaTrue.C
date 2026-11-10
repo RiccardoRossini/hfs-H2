@@ -1,5 +1,5 @@
 
-vector<Double_t> GetLambdaTrueRR( TString tag   = "RAL202305", // this function calculates the true mean and sigma of measured wl 
+vector<Double_t> GetLambdaTrue( TString tag   = "RAL202305", // this function calculates the true mean and sigma of measured wl 
     UInt_t  repro = 2,
     UInt_t  batch = 9,
     TString lasercut = "lphd>0",

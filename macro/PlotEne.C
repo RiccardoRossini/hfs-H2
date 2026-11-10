@@ -13,7 +13,7 @@
 //  4. Fills the energy histograms h0 (signal) and h1 (reference), with Sumw2.
 //  5. Computes the number of triggers T = sum of weights over the triggers passing the
 //     same trigger-level selection (laser cut + neighbour cut) as the X-rays, via
-//     GetTriggersRR, and scales each histogram by 1/T (X-rays per trigger).
+//     GetTriggers, and scales each histogram by 1/T (X-rays per trigger).
 //  6. Integrates both histograms over the window [sign0, sign1] keV (histogram bins
 //     (sign0-bin0)/binw to (sign1-bin0)/binw, both inclusive) and builds either the
 //     ratio or the difference of the two integrals, depending on 'differ'.
@@ -213,8 +213,8 @@ vector<Double_t> PlotEne(TString tagS      = "RAL202304",
   
   Double_t errTrg0 = 0;
   Double_t errTrg1 = 0;
-  Double_t trg0 = GetTriggersRR(t1s, lasercut, weight, &errTrg0);
-  Double_t trg1 = GetTriggersRR(t1b, lasercutB, weight, &errTrg1);
+  Double_t trg0 = GetTriggers(t1s, lasercut, weight, &errTrg0);
+  Double_t trg1 = GetTriggers(t1b, lasercutB, weight, &errTrg1);
   cout << "Number of triggers for normalisation --> \tthis batch: " << trg0 << " +/- " << errTrg0 << "\tref batch: " << trg1 << " +/- " << errTrg1 << endl;
   signVec[2] = trg0; 
   signVec[3] = errTrg0;

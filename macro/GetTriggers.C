@@ -1,7 +1,7 @@
 // Calculates number of triggers if weight ==1, otherwise the weighted number of triggers
 
 // version 1: passing the tree already set with the TEntryList from NeighbourCut
-Double_t GetTriggersRR(TTree*    t,  // t: tree with the entry list (neighbour cut) already set by the caller
+Double_t GetTriggers(TTree*    t,  // t: tree with the entry list (neighbour cut) already set by the caller
          TString   lasercut = "lphd==0", 
          TString   weight = "1",
          Double_t* err = nullptr, 
@@ -10,7 +10,7 @@ Double_t GetTriggersRR(TTree*    t,  // t: tree with the entry list (neighbour c
     if (err) *err = 0;
 
     if (!t) {
-        if (debug) cout << " GetTriggersRR: null tree" << endl;
+        if (debug) cout << " GetTriggers: null tree" << endl;
         return 0;
     }
 
@@ -19,7 +19,7 @@ Double_t GetTriggersRR(TTree*    t,  // t: tree with the entry list (neighbour c
     Long64_t n = t->Draw("1", Form("(%s)*(%s)", weight.Data(), lasercut.Data()), "goff");
 
     if (n < 0) {
-        if (debug) cout << " GetTriggersRR: Draw failed" << endl;
+        if (debug) cout << " GetTriggers: Draw failed" << endl;
         return 0;
     }
 
@@ -45,7 +45,7 @@ Double_t GetTriggersRR(TTree*    t,  // t: tree with the entry list (neighbour c
 
 
 // version 2: passing info and extracting the tree from the file (can't do it if TEntryList from NeighbourCut has been applied)
-Double_t GetTriggersRR(TString tag   = "RAL202305",
+Double_t GetTriggers(TString tag   = "RAL202305",
 		     UInt_t  repro = 2,
 		     UInt_t  batch = 9,
 		     TString lasercut = "lphd==0",
