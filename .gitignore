@@ -44,9 +44,6 @@ condor/per_det/logs/*.err
 !condor/*.dag
 !condor/*.jdl
 
-# Ignore generic calcratebatch current version
-calcratebatch.cxx
-
 # Keep .C macros under plots
 !plots/PlotRateBatch.C
 !plots/RatioFromCFiles.C
