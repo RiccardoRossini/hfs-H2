@@ -15,14 +15,14 @@ void rootlogon() {
   gStyle->SetPadTopMargin  (0.07);
 
   gROOT->LoadMacro("macro/GetHydrogenTags.C");
-  gROOT->LoadMacro("macro/GetBatchVecRR.C");
-  gROOT->LoadMacro("macro/GetLambdaVecRR.C");
-  gROOT->LoadMacro("macro/GetDetNameRR.C");
-  gROOT->LoadMacro("macro/GetTriggersRR.C");
-  gROOT->LoadMacro("macro/GetTextRR.C");
-  gROOT->LoadMacro("macro/GetLambdaTrueRR.C");
-  gROOT->LoadMacro("macro/NeighbourCutRR.C");
-  gROOT->LoadMacro("macro/GetDetCutRR.C");
+  gROOT->LoadMacro("macro/GetBatchVec.C");
+  gROOT->LoadMacro("macro/GetLambdaVec.C");
+  gROOT->LoadMacro("macro/GetDetName.C");
+  gROOT->LoadMacro("macro/GetTriggers.C");
+  gROOT->LoadMacro("macro/GetText.C");
+  gROOT->LoadMacro("macro/GetLambdaTrue.C");
+  gROOT->LoadMacro("macro/NeighbourCut.C");
+  gROOT->LoadMacro("macro/GetDetCut.C");
 
   gROOT->LoadMacro("macro/PlotEne.C");
 
