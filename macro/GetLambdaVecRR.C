@@ -1,9 +1,9 @@
 
-vector<UInt_t> GetLambdaVec(TString tag = "RAL202305") { // this function gets the lambda aim i.e. the value set on the laser DAQ as the aim wl for each batch
+vector<UInt_t> GetLambdaVec(TString period = "RAL202305") { // this function gets the lambda aim i.e. the value set on the laser DAQ as the aim wl for each batch
 
   vector<UInt_t> lambdaVec;
   
-  if (tag == "RAL202304") {
+  if (period == "RAL202304") {
 
     lambdaVec.push_back( 550);
     lambdaVec.push_back( 650);
@@ -12,7 +12,7 @@ vector<UInt_t> GetLambdaVec(TString tag = "RAL202305") { // this function gets t
     lambdaVec.push_back( 750);
     lambdaVec.push_back( 650);
   }
-  else if (tag == "RAL202305") {
+  else if (period == "RAL202305") {
     
     lambdaVec.push_back( 800);
     lambdaVec.push_back( 700);
@@ -24,7 +24,7 @@ vector<UInt_t> GetLambdaVec(TString tag = "RAL202305") { // this function gets t
     lambdaVec.push_back( 825);
     lambdaVec.push_back( 875);
   }
-  else if (tag == "RAL202404") {
+  else if (period == "RAL202404") {
     
     lambdaVec.push_back( 525);
     lambdaVec.push_back( 500);
@@ -34,7 +34,7 @@ vector<UInt_t> GetLambdaVec(TString tag = "RAL202305") { // this function gets t
     lambdaVec.push_back( 900);
     lambdaVec.push_back( 925);
   }
-  else if (tag == "RAL202405") {
+  else if (period == "RAL202405") {
     
     lambdaVec.push_back( 925);
     lambdaVec.push_back( 950);
@@ -45,7 +45,7 @@ vector<UInt_t> GetLambdaVec(TString tag = "RAL202305") { // this function gets t
     lambdaVec.push_back(1025);
     lambdaVec.push_back(1050);
   }  
-  else if (tag == "RAL202508") {
+  else if (period == "RAL202508") {
     
     lambdaVec.push_back( 400);
     lambdaVec.push_back( 375);
@@ -57,7 +57,7 @@ vector<UInt_t> GetLambdaVec(TString tag = "RAL202305") { // this function gets t
     lambdaVec.push_back( 225);
     lambdaVec.push_back( 200);
   }  
-  else if (tag == "RAL202509") {
+  else if (period == "RAL202509") {
     
     lambdaVec.push_back( 525);
     lambdaVec.push_back( 555);
@@ -73,7 +73,13 @@ vector<UInt_t> GetLambdaVec(TString tag = "RAL202305") { // this function gets t
     lambdaVec.push_back(  80);
     lambdaVec.push_back(  40);
   }  
-  else { cout << " ERROR! Unknown lambda vector for tag " << tag << endl; exit(0); }
+  else if (period == "hydrogen") { // year instead of wavelength for H2 data
+    
+    lambdaVec.push_back(2023);
+    lambdaVec.push_back(2024);
+    lambdaVec.push_back(2025);
+  } 
+  else { cout << " ERROR! Unknown lambda vector for period " << period << endl; exit(0); }
  
   return lambdaVec;
 }

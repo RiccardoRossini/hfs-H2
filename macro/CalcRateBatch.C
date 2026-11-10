@@ -1,5 +1,5 @@
 
-void CalcRateBatch(TString tag      = "RAL202405",
+void CalcRateBatch(TString period      = "RAL202405",
 		   UInt_t  repro    = 4,
 		   TString tagB     = "RAL202304",
 		   UInt_t  reproB   = 4,
@@ -21,8 +21,16 @@ void CalcRateBatch(TString tag      = "RAL202405",
 			 UInt_t  sign1    = 200,
 			 Bool_t  differ   = 0) { // differ:  the value returned by PlotEne is: 0 = the ratio, 1 = the difference
   
-  vector<UInt_t> batchVec  = GetBatchVec (tag);
-  vector<UInt_t> lambdaVec = GetLambdaVec(tag);
+
+  vector<UInt_t> batchVec  = GetBatchVec(period);
+  vector<UInt_t> lambdaVec = GetLambdaVec(period); 
+  vector<TString> tagVec;
+
+  if (period == "hydrogen") {
+    tagVec   = GetHydrogenTags(); 
+  } else {
+    tagVec   = {period};
+  }
   
   UInt_t nPoints = batchVec.size();
 
@@ -41,8 +49,6 @@ void CalcRateBatch(TString tag      = "RAL202405",
   
   
   // Setting up string variables
-  
-  TString detname = GetDetName(tag, ndet);
 
   TString weightName = weight;
   weightName.ReplaceAll("*", "");
@@ -57,7 +63,7 @@ void CalcRateBatch(TString tag      = "RAL202405",
   
   // setting up and opening the output file
   TString ofilename = Form("plots/calcratebatch/calcratebatch_%s-RV%i_%s_ndet%03i_bsys%i_weight%s_t%04i-%04ins_ene%03i-%03ikeV_ref%s-RV%i-b%02i.root",
-			   tag.Data(), repro, lcut.Data(), ndet, bsys, weightName.Data(), tmin, tmax, sign0, sign1, tagB.Data(), reproB, batchB);
+			   period.Data(), repro, lcut.Data(), ndet, bsys, weightName.Data(), tmin, tmax, sign0, sign1, tagB.Data(), reproB, batchB);
   TFile* ofile = new TFile(ofilename, "RECREATE");
   cout << " ofilename: " << ofilename << endl;
   
@@ -93,6 +99,7 @@ void CalcRateBatch(TString tag      = "RAL202405",
   tree->Branch("trigBErr",          &t_trigBErr,      "trigBErr/D");
   
   
+  UInt_t j = 0;
   
 //  for (UInt_t npp=0; npp<nPoints; npp++)     cout << batchVec[npp] << endl; //debug
   
@@ -107,59 +114,35 @@ void CalcRateBatch(TString tag      = "RAL202405",
     
     xVal[np] = lambda;
 
-    vector<Double_t> y0vec = PlotEne(tag, repro, batchS, tagB, reproB, batchB, ndet, weight, tmin, tmax, bsys, draw, brmsmax, basemax, flagmax, deltamin, label, lasercut, lasercutB, sign0, sign1, differ);
+
+
+    vector<Double_t> y0vec = PlotEne(tagVec[j], repro, batchS, tagB, reproB, batchB, ndet, weight, tmin, tmax, bsys, draw, brmsmax, basemax, flagmax, deltamin, label, lasercut, lasercutB, sign0, sign1, differ);
     if (y0vec.size() < 6) throw std::runtime_error("PlotEne returned fewer than 6 values");
-    
+      
     Double_t s0    = y0vec[0]; // Integral ratio of current batch wrt reference batch 
     Double_t s0err = y0vec[1];
-    
-//    Double_t s1 = y1vec[0];
-//    Double_t s2 = y2vec[0];
-
-//    Double_t ds1 = fabs(s1 - s0);
-//    Double_t ds2 = fabs(s2 - s0);    
-//    Double_t sys = TMath::Max(ds1, ds2);
 
     yVal0[np] = s0;
     yErr0[np] = s0err;
-//    yErr0[np] = sqrt(pow(s0err, 2) + pow(sys, 2)); // Add systematic effect due to background fluctuations
 
-// Old version 
-    // Double_t trgS = GetTriggersRR(tag,  repro,  batchS, lasercut);
-    // Double_t trgB = GetTriggersRR(tagB, reproB, batchB, lasercutB);
-    // if (trgB==0){ // check denominator is not zero! 
-    //    cerr << "ERROR: zero triggers in reference sample\n" << "tagB=" << tagB << " reproB=" << reproB << " batchB=" << batchB << endl;
-    //    throw std::runtime_error("Zero reference triggers in background data");
-    // }
-    // yVal1[np] = trgS / trgB;
-    // yErr1[np] = yVal1[np] * sqrt(1.0/trgS + 1.0/trgB);
 
-// New version
-// CalcRateBatch.C: delete the two GetTriggersRR calls and use
-  Double_t trgS = y0vec[2], eTrgS = y0vec[3];
-  Double_t trgB = y0vec[4], eTrgB = y0vec[5];
-  if (trgS == 0 || trgB == 0) {
-    cerr << "ERROR: zero triggers, batch " << batchS << endl;
-    throw std::runtime_error("Zero triggers");
-  }
-  yVal1[np] = trgS / trgB;
-  yErr1[np] = yVal1[np] * sqrt(pow(eTrgS/trgS, 2) + pow(eTrgB/trgB, 2));
+    Double_t trgS = y0vec[2], eTrgS = y0vec[3];
+    Double_t trgB = y0vec[4], eTrgB = y0vec[5];
+    if (trgS == 0 || trgB == 0) {
+      cerr << "ERROR: zero triggers, batch " << batchS << endl;
+      throw std::runtime_error("Zero triggers");
+    }
+    yVal1[np] = trgS / trgB;
+    yErr1[np] = yVal1[np] * sqrt(pow(eTrgS/trgS, 2) + pow(eTrgB/trgB, 2));
 
-//  yVal2[np] = yVal0[np]/yVal1[np]; // Oxygen X-rays per muon trigger
-//  yErr2[np] = yErr0[np]/yVal1[np];
-
-//		auto lambdaTrueVec = GetLambdaTrueRR(tag, repro, batchS);
+    TString detname = GetDetName(tagVec[j], ndet);
 
     cout << Form(" ndet %03i %8s batch %02i wl %04.0f signal: %9.2f +/- %9.2f (%5.1f%%) triggers: %.1f +/- %.1f",
              ndet, detname.Data(), batchS, lambda,
              yVal0[np], yErr0[np], 100*yErr0[np]/yVal0[np],
              trgS, eTrgS) << endl;
 
-    // OLD version
-    //  cout << Form(" ndet %03i %8s batch %02i wl %04.0f signal: %9.2f +/- %9.2f (%5.1f%%) triggers: %.0f", 
-		//   ndet, detname.Data(), batchS, lambda,
-		//   yVal0[np], yErr0[np], 100*yErr0[np]/yVal0[np],
-		//   yVal1[np]) << endl;
+
 
 		 
 		// filling the tree
@@ -179,6 +162,8 @@ void CalcRateBatch(TString tag      = "RAL202405",
     t_trigBErr      = eTrgB;
     
     tree->Fill();
+
+    if (period == "hydrogen") j++;
 
   } ////////// END OF MAIN LOOP /////////////
 

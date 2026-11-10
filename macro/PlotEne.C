@@ -3,7 +3,7 @@
 // counts used for the normalisation.
 //
 // WHAT IT DOES
-//  1. Opens the tree t1 of the L3 ROOT file of the signal batch (tag, repro, batchS) and
+//  1. Opens the tree t1 of the L3 ROOT file of the signal batch (tagS, repro, batchS) and
 //     of the reference batch (tagB, reproB, batchB).
 //  2. Selects X-rays with weight*(brms, base, flag, delta, start-time window tmin-tmax,
 //     detector cut ndet, laser cut). The reference always uses lphd==0.
@@ -44,7 +44,7 @@
 //   bsys    : 0 = nominal; 1, 2 = shifted ratio for a background-fluctuation systematic
 //   bin0, bin1, binw : histogram range and bin width in keV
 
-vector<Double_t> PlotEne(TString tag      = "RAL202304",
+vector<Double_t> PlotEne(TString tagS      = "RAL202304",
 			 UInt_t  repro    = 5,
 			 UInt_t  batchS   = 13,
 			 TString tagB     = "RAL202303",
@@ -79,7 +79,7 @@ vector<Double_t> PlotEne(TString tag      = "RAL202304",
 
 
   
-  TString ifilenameS = gSystem->GetFromPipe(Form("ls data/famu/%s/ROOT/L3-RV%i/batch%i*/*.root | tail -n 1", tag.Data(),  repro,  batchS));
+  TString ifilenameS = gSystem->GetFromPipe(Form("ls data/famu/%s/ROOT/L3-RV%i/batch%i*/*.root | tail -n 1", tagS.Data(),  repro,  batchS));
   TString ifilenameB = gSystem->GetFromPipe(Form("ls data/famu/%s/ROOT/L3-RV%i/batch%i*/*.root | tail -n 1", tagB.Data(), reproB, batchB));
 
   if (gSystem->AccessPathName(ifilenameS)) { cout << " File not found: " << ifilenameS << endl; return signVec; }
@@ -154,17 +154,25 @@ vector<Double_t> PlotEne(TString tag      = "RAL202304",
   TString goodlasercut = "ltshot>=1"; //"lphd>0";
   Long64_t nTot_S, nSel_S, nTot_B, nSel_B;
   
-  // signal
-  TEntryList* elistS = NeighbourCut(t1s, goodlasercut);
-  nTot_S = t1s->GetEntries();
-  t1s->SetEntryList(elistS);
-  nSel_S = elistS->GetN();
-  cout << "Total signal events: " << nTot_S << endl;
-  cout << "Signal events surviving neighbour nL cut: " << nSel_S << "(" << (double)nSel_S/nTot_S*100 << "%)" << endl;
+  // signal (neighbour cut not applied to H2 data as there's no laser there!)
+  Bool_t skipNeighbour = (tagS == "RAL202303" && batchS == 6) || (tagS == "RAL202405" && batchS == 25) || (tagS == "RAL202509" && batchS == 33);
+  TEntryList* elistS = nullptr;
+  if (!skipNeighbour) {
+    elistS = NeighbourCut(t1s, goodlasercut);
+    nTot_S = t1s->GetEntries();
+    t1s->SetEntryList(elistS);
+    nSel_S = elistS->GetN();
+    cout << "Total signal events: " << nTot_S << endl;
+    cout << "Signal events surviving neighbour nL cut: " << nSel_S << "(" << (double)nSel_S/nTot_S*100 << "%)" << endl;
+  } else {
+    nTot_S = t1s->GetEntries();
+    nSel_S = nTot_S;
+    cout << " Neighbour cut skipped for H2 signal. Total signal events: " << nTot_S << endl;
+  }
   t1s->Project(h0name, "x.ene", tcut);
   
   // background (neighbour cut not applied to H2 data as there's no laser there!)
-  Bool_t skipNeighbour = (tagB == "RAL202303" && batchB == 6) || (tagB == "RAL202405" && batchB == 25) || (tagB == "RAL202509" && batchB == 33);
+  skipNeighbour = (tagB == "RAL202303" && batchB == 6) || (tagB == "RAL202405" && batchB == 25) || (tagB == "RAL202509" && batchB == 33);
   TEntryList* elistB = nullptr;
   if (!skipNeighbour) {
     elistB = NeighbourCut(t1b, goodlasercut);
@@ -254,7 +262,7 @@ vector<Double_t> PlotEne(TString tag      = "RAL202304",
   cout << " ratio sig/ref: " << norm << " +/- " << errnorm << endl;
  
   
-  TString detname = GetDetName(tag, ndet);  
+  TString detname = GetDetName(tagS, ndet);  
   
   TString weightName = weight;
   weightName.ReplaceAll("*", "");
@@ -268,7 +276,7 @@ vector<Double_t> PlotEne(TString tag      = "RAL202304",
   lcut.ReplaceAll("<",  "L");   // Less
   
   TString c0name = Form("plots/plotene/plotene_%s-RV%i-b%02i_%s_det%03i_bsys%i_weight%s_t%04i-%04ins_ene%03i-%03ikeV_ref%s-RV%i-b%02i", 
-			tag.Data(), repro, batchS, lcut.Data(), ndet, bsys, weightName.Data(), start0, start1, sign0, sign1, tagB.Data(), reproB, batchB);
+			tagS.Data(), repro, batchS, lcut.Data(), ndet, bsys, weightName.Data(), start0, start1, sign0, sign1, tagB.Data(), reproB, batchB);
   
   TCanvas* c0 = new TCanvas(c0name, c0name);
 
@@ -282,7 +290,7 @@ vector<Double_t> PlotEne(TString tag      = "RAL202304",
 //    h0->Draw("HISTOsame");
   }
   
-  TString text0 = GetText0(tag, batchS);
+  TString text0 = GetText0(tagS, batchS);
   TString text1 = Form("%s, weight %s", detname.Data(), weight.Data());
   TString text2 = Form("t_{s}: [%i, %i] ns",  start0, start1);
 
@@ -381,6 +389,6 @@ vector<Double_t> PlotEne(TString tag      = "RAL202304",
   tfs->Close();  // delete tfs;
   tfb->Close();  // delete tfb;
  
-  cout << "End of PlotEne call: " << tag.Data() << " batch: " << batchS << endl;
+  cout << "End of PlotEne call: " << tagS.Data() << " batch: " << batchS << endl;
   return signVec;
 }

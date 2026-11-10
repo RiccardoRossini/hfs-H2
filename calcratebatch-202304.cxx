@@ -23,7 +23,7 @@
   if (nset == 1) weight = "1";
   
   // set the period to analyse
-  TString   tag      = "RAL202304";
+  TString   period      = "RAL202304";
   
   // set the background batch 0=REF, 1=H2, other=custom
   UInt_t    bckgrsel = 0;
@@ -47,6 +47,6 @@
   
 //ndet = 1; // LaBr
 
-  CalcRateBatch(tag, repro, tagB, reproB, batchB, ndet, weight, tmin, tmax, bsys, draw, brmsmax, basemax, flagmax, deltamin, lasercut, lasercutB, "Internal", sign0, sign1, differ);
+  CalcRateBatch(period, repro, tagB, reproB, batchB, ndet, weight, tmin, tmax, bsys, draw, brmsmax, basemax, flagmax, deltamin, lasercut, lasercutB, "Internal", sign0, sign1, differ);
 
 }
