@@ -47,3 +47,4 @@ condor/per_det/logs/*.err
 # Keep .C macros under plots
 !plots/PlotRateBatch.C
 !plots/RatioFromCFiles.C
+!plots/rootlogon.C

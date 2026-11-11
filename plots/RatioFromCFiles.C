@@ -1,16 +1,3 @@
-#include <TCanvas.h>
-#include <TGraphErrors.h>
-#include <TLegend.h>
-#include <TLine.h>
-#include <TROOT.h>
-#include <TSystem.h>
-#include <TList.h>
-#include <TObject.h>
-
-#include <iostream>
-#include <vector>
-#include <cmath>
-#include <algorithm>
 
 /*
 This macro takes two canvases saved in .C (outputs of PlotRateBatch), and returns the ratio
@@ -195,3 +182,4 @@ TCanvas* RatioFromCFiles(
 
     return cR;
 }
+
