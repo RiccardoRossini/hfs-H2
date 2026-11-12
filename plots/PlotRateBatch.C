@@ -1,20 +1,21 @@
  
 /* 
 This macro contains two functions: 
-  - PlotRateBatch to plot variables from calcratebatch files as a function of the batch, giving those hists as output in a plotratebatch root file
+  - PlotRateBatch to plot variables from calcratebatch files as a function of the batch, giving those hists as output in a plotratebatch root file. It can also produce normalisation file from the analysed data, or use a normalisation file to normalise the data.
   - DrawFileInfo, utility to put the text on the plots
 */ 
 
 void DrawFileInfo(const TString& filename, Double_t x, Double_t y);
 
 void PlotRateBatch( TString PATH        = "calcratebatch/RV6_lphd0_det300_bsys0_weightw0w1_t0780-2000ns_ene060-200keV_bckgr-H2/",
+                    Bool_t   useNorm    = kFALSE,
                     Bool_t  makeNorm    = kFALSE,
-                    TString plotPATH    = "plotratebatch/",
-                    TString normFile    = "norm.root") {
-
+                    TString normFile    = "",
+                    TString plotPATH    = "plotratebatch/") {
+    
     /////////////////////////////////////////////////////////////
     /////////////////// PLOT SETUP PARAMETERS ///////////////////
-    ///////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////
 
     const UInt_t nYvarPerFile = 3;
     const UInt_t nXvarPerFile = 2;
@@ -24,12 +25,11 @@ void PlotRateBatch( TString PATH        = "calcratebatch/RV6_lphd0_det300_bsys0_
     const TString yExpr[nYvarPerFile] = {"s0",    "trigRatio",    "trigS"};
     const TString eExpr[nYvarPerFile] = {"s0Err", "trigRatioErr", "trigSErr"};
     const TString xExpr[nXvarPerFile] = {"lambdaExp", "batch"};
-    const TString xTitles[nYvarPerFile] = {   "Wavelength [pm] - 6788000",
+    const TString xTitles[nXvarPerFile] = {   "Wavelength [pm] - 6788000",
                                                 "Batch number"};
     const TString yTitles[nYvarPerFile] = {   "Normalised integral ratio wrt. reference",
                                                 "Ratio of #mu triggers wrt. reference",
                                                 "Triggers of the signal batch (weighted)"};
-    for (UInt_t j = 0; j < nGraphsPerFile; ++j) c[j] = new TCanvas(Form("c%d", j), "", 800, 600);
 
     std::vector<int> markerStyles = {24, 20, 25, 21, 28, 34};
     std::vector<int> colors       = {kBlack, kBlack, kBlack, kBlack, kBlack, kBlack};
@@ -40,8 +40,30 @@ void PlotRateBatch( TString PATH        = "calcratebatch/RV6_lphd0_det300_bsys0_
     /////////////////// END OF SETUP PARAMETERS ///////////////////
     ///////////////////////////////////////////////////////////////
 
+    // Guards
+    if (makeNorm && useNorm) {
+        cout << "FAIL, makeNorm and useNorm are both True.\n";
+        return;
+    }
+    if (!normFile.EndsWith(".root")) {
+        cout << "normFile must be a .root file: " << normFile.Data() << endl;
+        return;
+    }
+    if (useNorm && gSystem->AccessPathName(normFile)) {   // AccessPathName returns true if the file does NOT exist
+        cout << "useNorm = true but " << normFile.Data() << " does not exist" << endl;
+        return;
+    }
+    if (makeNorm && !gSystem->AccessPathName(normFile)) {
+        cout << "WARNING: " << normFile.Data() << " already exists and will be overwritten" << endl;
+    }
+
     if (!PATH.EndsWith("/"))        PATH     += "/";
     if (!plotPATH.EndsWith("/"))    plotPATH += "/";
+
+    // Default normFile is norm.root in the calcratebatch directory 
+    if (normFile.IsNull())          normFile = PATH + "norm.root";
+    
+    for (UInt_t j = 0; j < nGraphsPerFile; ++j) c[j] = new TCanvas(Form("c%d", j), "", 800, 600);
     
     std::vector<TString> fileNamesVec;
     TSystemDirectory dir("mydir", PATH);
@@ -56,12 +78,11 @@ void PlotRateBatch( TString PATH        = "calcratebatch/RV6_lphd0_det300_bsys0_
         while ((file = (TSystemFile*)next())) {
             TString fname = file->GetName();
 
-            // skip the norm file and hydrogen batches
-            if (fname == normFile || fname.Contains("hydrogen")) continue; 
+            // skip the normFile file and hydrogen batches
+            if (fname == gSystem->BaseName(normFile) || fname.Contains("hydrogen")) continue; 
 
             if (!file->IsDirectory() && fname.EndsWith(".root")) {
                 fileNamesVec.push_back(PATH + fname);
-                cout << "\t" << fname << "for period" << periods[fileCount++] << endl;
             }
         }
         if (fileNamesVec.empty()) {
@@ -72,8 +93,18 @@ void PlotRateBatch( TString PATH        = "calcratebatch/RV6_lphd0_det300_bsys0_
         cout << "Directory " << PATH << " is empty or it does not exist. " << endl; 
         return;
     }
-
     std::sort(fileNamesVec.begin(), fileNamesVec.end()); // alphabetical order
+    
+    if (fileNamesVec.size() > periods.size()) throw std::runtime_error("More files than periods");
+    for (UInt_t i = 0; i < fileNamesVec.size(); ++i)
+    if (!fileNamesVec[i].Contains(periods[i]))
+        throw std::runtime_error(Form("%s is not period %s", fileNamesVec[i].Data(), periods[i].Data()));
+    
+    for (UInt_t i = 0; i < fileNamesVec.size(); ++i) {
+        if (!fileNamesVec[i].Contains(periods[i]))
+            throw std::runtime_error(Form("%s is not period %s", fileNamesVec[i].Data(), periods[i].Data()));
+        cout << "\t" << fileNamesVec[i] << " for period " << periods[i] << endl;
+    }
 
     const UInt_t nFiles = fileNamesVec.size();
 
@@ -89,13 +120,18 @@ void PlotRateBatch( TString PATH        = "calcratebatch/RV6_lphd0_det300_bsys0_
     TString  t_Period;
     UInt_t   t_batch;
     Double_t t_norm;
-    if(makeNorm){
-        fNorm = new TFile(PATH + normFile, "RECREATE");
+    if (makeNorm){
+        fNorm = new TFile(normFile, "RECREATE");
         tNorm = new TTree("tNorm", "Normalisation coefficients");
         tNorm->Branch("period", &t_Period);
         tNorm->Branch("batch",  &t_batch, "batch/i");
         tNorm->Branch("norm",   &t_norm,  "norm/D");
     } 
+    if (useNorm){
+        fNorm = TFile::Open(normFile, "READ");   // read-only
+        tNorm = fNorm ? (TTree*)fNorm->Get("tNorm") : nullptr;
+        if (!tNorm) throw std::runtime_error(Form("Cannot read tree tNorm in %s", normFile.Data()));
+    }
 
     // MAIN LOOP
     UInt_t idxcanvas=0;
@@ -106,25 +142,45 @@ void PlotRateBatch( TString PATH        = "calcratebatch/RV6_lphd0_det300_bsys0_
 
                 TFile *f = TFile::Open(fileNamesVec[i]);
                 if (!f || f->IsZombie()) {
-                    printf("Cannot open %s\n", fileNamesVec[i].Data());
+                    cout << "Cannot open " << fileNamesVec[i] << endl;
                     continue;
                 }
 
                 // Data retrieval (using Draw() with opt. "goff" to avoid plotting)
                 TTree *t = (TTree*)f->Get("tRate");
                 TGraphErrors *gr = nullptr;
-                if (t && t->Draw(Form("%s:%s:%s", xExpr[k].Data(), yExpr[h].Data(), eExpr[h].Data()), "", "goff")){
+                TString expr = Form("%s:%s:%s:batch", xExpr[k].Data(), yExpr[h].Data(), eExpr[h].Data());
+                if (t && t->Draw(expr, "", "goff")){
                     gr = new TGraphErrors(t->GetSelectedRows(), t->GetV1(), t->GetV2(), nullptr, t->GetV3());
                 }
                 if (!gr) {
-                    printf("Missing %s in %s\n", yExpr[h].Data(), fileNamesVec[i].Data());
+                    cout << "Missing " << yExpr[h].Data() << " in " << fileNamesVec[i].Data() << endl;
                     f->Close();
                     continue;
                 }
                 if (!gr) {
-                    printf("Missing %s in %s\n", yExpr[h].Data(), fileNamesVec[i].Data());
+                    cout << "Missing " << yExpr[h].Data() << " in " << fileNamesVec[i].Data() << endl;
                     f->Close();
                     continue;
+                }
+                
+
+                map<UInt_t,Double_t> normOfBatch;
+                if (useNorm && h == 0) {
+                    Long64_t nn = tNorm->Draw("batch:norm", Form("period==\"%s\"", periods[i].Data()), "goff");
+                    if (nn == 0) 
+                        throw std::runtime_error(Form("No norm for period %s in     %s", periods[i].Data(), normFile.Data()));
+                    for (Long64_t r = 0; r < nn; ++r)
+                        normOfBatch[TMath::Nint(tNorm->GetV1()[r])] = tNorm->GetV2()[r];
+
+                    for (int jj = 0; jj < gr->GetN(); ++jj) {
+                        UInt_t batch = TMath::Nint(t->GetV4()[jj]);
+                        auto it = normOfBatch.find(batch);
+                        if (it == normOfBatch.end())
+                            throw std::runtime_error(Form("No norm for %s batch %u", periods[i].Data(), batch));
+                        gr->SetPoint(jj, gr->GetX()[jj], gr->GetY()[jj] * it->second);
+                        gr->SetPointError(jj, gr->GetErrorX(jj), gr->GetErrorY(jj) * it->second);
+                    }
                 }
 
                 gr->SetTitle("");
@@ -178,8 +234,13 @@ void PlotRateBatch( TString PATH        = "calcratebatch/RV6_lphd0_det300_bsys0_
                 if (makeNorm && h==0 && k==1){
                     // put x and y in the norm vectors! 
                     vector<UInt_t> batchVec = GetBatchVec(periods[i]);
+
+                    if (gr->GetN() != (UInt_t)batchVec.size()){
+                        throw std::runtime_error(Form("%s: %d graph points but %zu batches in GetBatchVec", periods[i].Data(), gr->GetN(), batchVec.size()));
+                    return;
+                    }
                     for (UInt_t ii=0; ii<batchVec.size(); ++ii) {
-                        if (batchVec[ii] != (UInt_t)gr->GetX()[ii]) {
+                        if (batchVec[ii] != gr->GetX()[ii]) {
                             cerr << "ERROR: batch mismatch, batchVec[" << ii << "] = " << batchVec[ii] << ", gr->GetX()[" << ii << "] = " << gr->GetX()[ii] << endl;
                             throw std::runtime_error("Batch mismatch");
                         }
@@ -213,6 +274,7 @@ void PlotRateBatch( TString PATH        = "calcratebatch/RV6_lphd0_det300_bsys0_
         fNorm->Write("", TObject::kOverwrite);
         fNorm->Close();
     }
+    if (useNorm) fNorm->Close();
 
     // Draw text and horizontal lines at y=1 on all canvases
     idxcanvas=0;
