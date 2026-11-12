@@ -73,7 +73,6 @@ void PlotRateBatch( TString PATH        = "calcratebatch/RV6_lphd0_det300_bsys0_
         TIter next(files);
         TSystemFile *file;
         cout << "Suitable files found in " << PATH << ":" << endl;
-        UInt_t fileCount = 0;
 
         while ((file = (TSystemFile*)next())) {
             TString fname = file->GetName();
@@ -96,9 +95,6 @@ void PlotRateBatch( TString PATH        = "calcratebatch/RV6_lphd0_det300_bsys0_
     std::sort(fileNamesVec.begin(), fileNamesVec.end()); // alphabetical order
     
     if (fileNamesVec.size() > periods.size()) throw std::runtime_error("More files than periods");
-    for (UInt_t i = 0; i < fileNamesVec.size(); ++i)
-    if (!fileNamesVec[i].Contains(periods[i]))
-        throw std::runtime_error(Form("%s is not period %s", fileNamesVec[i].Data(), periods[i].Data()));
     
     for (UInt_t i = 0; i < fileNamesVec.size(); ++i) {
         if (!fileNamesVec[i].Contains(periods[i]))
@@ -169,7 +165,7 @@ void PlotRateBatch( TString PATH        = "calcratebatch/RV6_lphd0_det300_bsys0_
                 if (useNorm && h == 0) {
                     Long64_t nn = tNorm->Draw("batch:norm", Form("period==\"%s\"", periods[i].Data()), "goff");
                     if (nn == 0) 
-                        throw std::runtime_error(Form("No norm for period %s in     %s", periods[i].Data(), normFile.Data()));
+                        throw std::runtime_error(Form("No norm for period %s in %s", periods[i].Data(), normFile.Data()));
                     for (Long64_t r = 0; r < nn; ++r)
                         normOfBatch[TMath::Nint(tNorm->GetV1()[r])] = tNorm->GetV2()[r];
 
@@ -235,9 +231,8 @@ void PlotRateBatch( TString PATH        = "calcratebatch/RV6_lphd0_det300_bsys0_
                     // put x and y in the norm vectors! 
                     vector<UInt_t> batchVec = GetBatchVec(periods[i]);
 
-                    if (gr->GetN() != (UInt_t)batchVec.size()){
+                    if (gr->GetN() != (int)batchVec.size()){
                         throw std::runtime_error(Form("%s: %d graph points but %zu batches in GetBatchVec", periods[i].Data(), gr->GetN(), batchVec.size()));
-                    return;
                     }
                     for (UInt_t ii=0; ii<batchVec.size(); ++ii) {
                         if (batchVec[ii] != gr->GetX()[ii]) {
