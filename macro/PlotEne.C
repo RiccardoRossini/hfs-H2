@@ -73,10 +73,13 @@ vector<Double_t> PlotEne(TString tagS      = "RAL202304",
 			 UInt_t  sign0    = 60,
 			 UInt_t  sign1    = 200,
 			 Bool_t  differ   = 0, // the value returned by PlotEne is: 0 = the ratio, 1 = the difference
+       TCut    *cutSout = nullptr,
+       TCut    *cutBout = nullptr,
 			 UInt_t  bin0     = 60,
 			 UInt_t  bin1     = 600,
 			 UInt_t  binw     = 4,
 			 Bool_t  savehist = 1) {
+
   
   cout << "Beginning of PlotEne call." << endl;
   
@@ -150,6 +153,10 @@ vector<Double_t> PlotEne(TString tagS      = "RAL202304",
   
   tcut.Print();
   tcutB.Print();
+
+  // Letting CalcRateBatch (caller) access the cuts
+  if (cutSout) *cutSout = tcut;
+  if (cutBout) *cutBout = tcutB;
   
 //  TString varexp = "x.ene";
   
@@ -361,6 +368,10 @@ vector<Double_t> PlotEne(TString tagS      = "RAL202304",
     h0->Write();
     h1->Write();
     h2->Write();
+
+    tcut.Write("tcutS");
+    tcutB.Write("tcutB");
+
     outfile->Close();
     delete outfile;
     cout << "Saving hists in " << c0name << ".root" << endl;

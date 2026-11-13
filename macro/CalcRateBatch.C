@@ -101,6 +101,8 @@ void CalcRateBatch(TString period      = "RAL202405",
   tree->Branch("presErr",           &t_presErr,       "presErr/D");
   tree->Branch("temp",              &t_temp,          "temp/D");
   tree->Branch("tempErr",           &t_tempErr,       "tempErr/D");
+
+  TCut cutS, cutB; 
   
   UInt_t j = 0;
   
@@ -117,8 +119,7 @@ void CalcRateBatch(TString period      = "RAL202405",
     xVal[np] = lambda;
 
 
-
-    vector<Double_t> y0vec = PlotEne(tagVec[j], repro, batchS, tagB, reproB, batchB, ndet, weight, tmin, tmax, bsys, draw, brmsmax, basemax, flagmax, deltamin, label, lasercut, lasercutB, sign0, sign1, differ);
+    vector<Double_t> y0vec = PlotEne(tagVec[j], repro, batchS, tagB, reproB, batchB, ndet, weight, tmin, tmax, bsys, draw, brmsmax, basemax, flagmax, deltamin, label, lasercut, lasercutB, sign0, sign1, differ, &cutS, &cutB);
     if (y0vec.size() < 14) throw std::runtime_error("PlotEne returned fewer than 14 values");
       
     Double_t s0    = y0vec[0]; // Integral ratio of current batch wrt reference batch 
@@ -187,6 +188,8 @@ void CalcRateBatch(TString period      = "RAL202405",
   ofile->cd();
   g0->Write("g0");
   g1->Write("g1");
+  cutS.Write("tcutS");
+  cutB.Write("tcutB");
   tree->Write("", TObject::kOverwrite);
   ofile->Write("", TObject::kOverwrite);
   ofile->Close();
