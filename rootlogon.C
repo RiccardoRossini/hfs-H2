@@ -26,8 +26,6 @@ void rootlogon() {
   gROOT->LoadMacro("macro/GetDetCut.C");
   gROOT->LoadMacro("macro/GetPresTemp.C");
 
-  gROOT->LoadMacro("macro/GaussianKernel.C");
-
   // Load main macro calculating the ratio/difference of integrals
   gROOT->LoadMacro("macro/PlotEne.C");
 
