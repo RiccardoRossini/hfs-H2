@@ -6,10 +6,9 @@
 //  1. Opens the tree t1 of the L3 ROOT file of the signal batch (tagS, repro, batchS) and
 //     of the reference batch (tagB, reproB, batchB).
 //  2. Selects X-rays with weight*(brms, base, flag, delta, start-time window tmin-tmax,
-//     detector cut ndet, laser cut). The reference always uses lphd==0.
-//  3. Applies the neighbour cut (NeighbourCut, lphd>0) to the signal tree, and to the
-//     reference tree too unless it is a pure-H2 batch (skipNeighbour list), where there
-//     is no laser.
+//     detector cut ndet, laser cut). The reference uses lasercutB (should always be noLaser).
+//  3. Applies the neighbour cut (NeighbourCut, lasercut) to the signal and reference trees, 
+//     unless it is a pure-H2 batch (skipNeighbour list), where there is no laser.
 //  4. Fills the energy histograms h0 (signal) and h1 (reference), with Sumw2.
 //  5. Computes the number of triggers T = sum of weights over the triggers passing the
 //     same trigger-level selection (laser cut + neighbour cut) as the X-rays, via
@@ -27,7 +26,7 @@
 //  - Difference (differ=1): sqrt( err0^2 + err1^2 )
 //  - The uncertainty on T is not included in the above (it is returned separately).
 //
-// RETURNS vector<Double_t> signVec of size 6 (all zeros if the function exits early,
+// RETURNS vector<Double_t> signVec of size 14 (all zeros if the function exits early,
 // e.g. file or tree not found):
 //   signVec[0] = ratio int0/int1 (differ=0) or difference int0-int1 (differ=1),
 //                where int0 and int1 are the per-trigger integrals of signal and reference
@@ -36,6 +35,14 @@
 //   signVec[3] = errTrg0: sqrt(sum of squared weights) of the signal triggers
 //   signVec[4] = trg1:    weighted number of triggers of the reference batch
 //   signVec[5] = errTrg1: sqrt(sum of squared weights) of the reference triggers
+//   signVec[6] = int0:    integral of the signal batch
+//   signVec[7] = errInt0: uncertainty on the integral of the signal batch
+//   signVec[8] = int1:    integral of the reference batch
+//   signVec[9] = errInt1: uncertainty on the integral of the reference batch
+//   signVec[10]= pres:    average target pressure
+//   signVec[11]= errPres: uncertainty on the average target pressure
+//   signVec[12]= temp:    average target temperature
+//   signVec[13]= errTemp: uncertainty on the average target temperature
 //
 // KEY PARAMETERS
 //   weight  : per-entry weight used both for X-rays and for the trigger count
@@ -75,7 +82,7 @@ vector<Double_t> PlotEne(TString tagS      = "RAL202304",
   
   gROOT->SetBatch(!draw);
 
-  vector<Double_t> signVec(8, 0.); // output vector containing:
+  vector<Double_t> signVec(14, 0.); // output vector containing:
 
 
   
@@ -258,7 +265,11 @@ vector<Double_t> PlotEne(TString tagS      = "RAL202304",
   else if (bsys != 0) { cout << Form(" Unknown operation for bsys: %i", bsys) << endl; return signVec; }
   
   cout << "  integral sig: " << int0 << " +/- " << err0 << endl;
+  signVec[6] = int0; 
+  signVec[7] = err0;
   cout << "  integral ref: " << int1 << " +/- " << err1 << endl;
+  signVec[8] = int1; 
+  signVec[9] = err1;
   cout << " ratio sig/ref: " << norm << " +/- " << errnorm << endl;
  
   
@@ -335,13 +346,13 @@ vector<Double_t> PlotEne(TString tagS      = "RAL202304",
     signVec[0] = int0-int1;
     signVec[1] = sqrt(pow(err0,2)+pow(err1,2));
   }
-//  cout << Form(" sign_sys%i: %.2f +/- %.2f (%.2f %%)", bsys, signVec[0], signVec[1], 100*signVec[1]/signVec[0]) << endl;
 
-//  if (!draw) {
-//    tfs->Close();
-//    tfb->Close();
-//  }
-   
+  // Temperature and pressure
+  GetPresTemp(t1s, &signVec[10], &signVec[11], &signVec[12], &signVec[13]);
+  cout << " Average target pressure: " << signVec[10] << " +/- " << signVec[11] << " bar" << endl;
+  cout << " Average target temperature: " << signVec[12] << " +/- " << signVec[13] << " K" << endl;
+  
+
   if (savehist){
   
     TTree meta("meta", "analysis metadata");

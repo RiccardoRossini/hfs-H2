@@ -71,18 +71,16 @@ void CalcRateBatch(TString period      = "RAL202405",
   TTree* tree = new TTree("tRate", "Rate batch results");
   UInt_t   t_batch;
   Double_t t_lambdaExp;
-  Double_t t_lambdaTrue;
-  Double_t t_lambdaTrueErr;
-  Double_t t_s0;
-  Double_t t_s0Err;
-  Double_t t_trigRatio;
-  Double_t t_trigRatioErr;
-//  Double_t t_yield;
-//  Double_t t_yieldErr;
-  Double_t t_trigS;
-  Double_t t_trigSErr;
-  Double_t t_trigB;
-  Double_t t_trigBErr;
+  Double_t t_lambdaTrue, t_lambdaTrueErr;
+  Double_t t_s0, t_s0Err;
+  Double_t t_trigRatio, t_trigRatioErr;
+  Double_t t_trigS, t_trigSErr;
+  Double_t t_trigB, t_trigBErr;
+  Double_t t_intS, t_intSErr;
+  Double_t t_intB, t_intBErr;
+  Double_t t_pres, t_presErr;
+  Double_t t_temp, t_tempErr;
+
   tree->Branch("batch",             &t_batch,         "batch/i");
   tree->Branch("lambdaExp",         &t_lambdaExp,     "lambdaExp/D");
   tree->Branch("lambdaTrue",        &t_lambdaTrue,    "lambdaTrue/D");
@@ -91,17 +89,21 @@ void CalcRateBatch(TString period      = "RAL202405",
   tree->Branch("s0Err",             &t_s0Err,         "s0Err/D");
   tree->Branch("trigRatio",         &t_trigRatio,     "trigRatio/D");
   tree->Branch("trigRatioErr",      &t_trigRatioErr,  "trigRatioErr/D");
-//  tree->Branch("yield",             &t_yield,         "yield/D");
-//  tree->Branch("yieldErr",          &t_yieldErr,      "yieldErr/D");
   tree->Branch("trigS",             &t_trigS,         "trigS/D");
   tree->Branch("trigSErr",          &t_trigSErr,      "trigSErr/D");
   tree->Branch("trigB",             &t_trigB,         "trigB/D");
   tree->Branch("trigBErr",          &t_trigBErr,      "trigBErr/D");
-  
+  tree->Branch("intS",              &t_intS,          "intS/D");
+  tree->Branch("intSErr",           &t_intSErr,       "intSErr/D");
+  tree->Branch("intB",              &t_intB,          "intB/D");
+  tree->Branch("intBErr",           &t_intBErr,       "intBErr/D");
+  tree->Branch("pres",              &t_pres,          "pres/D");
+  tree->Branch("presErr",           &t_presErr,       "presErr/D");
+  tree->Branch("temp",              &t_temp,          "temp/D");
+  tree->Branch("tempErr",           &t_tempErr,       "tempErr/D");
   
   UInt_t j = 0;
   
-//  for (UInt_t npp=0; npp<nPoints; npp++)     cout << batchVec[npp] << endl; //debug
   
   ////////// MAIN LOOP /////////////
   for (UInt_t np=0; np<nPoints; np++) {
@@ -117,7 +119,7 @@ void CalcRateBatch(TString period      = "RAL202405",
 
 
     vector<Double_t> y0vec = PlotEne(tagVec[j], repro, batchS, tagB, reproB, batchB, ndet, weight, tmin, tmax, bsys, draw, brmsmax, basemax, flagmax, deltamin, label, lasercut, lasercutB, sign0, sign1, differ);
-    if (y0vec.size() < 6) throw std::runtime_error("PlotEne returned fewer than 6 values");
+    if (y0vec.size() < 14) throw std::runtime_error("PlotEne returned fewer than 14 values");
       
     Double_t s0    = y0vec[0]; // Integral ratio of current batch wrt reference batch 
     Double_t s0err = y0vec[1];
@@ -154,13 +156,19 @@ void CalcRateBatch(TString period      = "RAL202405",
     t_s0Err         = yErr0[np];
     t_trigRatio     = yVal1[np];
     t_trigRatioErr  = yErr1[np];
-//    t_yield         = yVal2[np];
-//    t_yieldErr      = yErr2[np];
     t_trigS         = trgS;   
     t_trigSErr      = eTrgS;
     t_trigB         = trgB;   
     t_trigBErr      = eTrgB;
-    
+    t_intS          = y0vec[6];
+    t_intSErr       = y0vec[7];
+    t_intB          = y0vec[8];
+    t_intBErr       = y0vec[9];
+    t_pres          = y0vec[10];
+    t_presErr       = y0vec[11];
+    t_temp          = y0vec[12];
+    t_tempErr       = y0vec[13];
+
     tree->Fill();
 
     if (period == "hydrogen") j++;
